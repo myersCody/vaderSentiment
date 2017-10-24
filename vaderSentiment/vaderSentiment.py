@@ -16,6 +16,14 @@ from itertools import product
 from inspect import getsourcefile
 from os.path import abspath, join, dirname
 
+"""
+Before I could import nltk I needed to install the tool using pip3 install nltk
+CDM - 20171023
+"""
+#This was needed for line #529
+import nltk
+nltk.download('punkt')
+
 ##Constants##
 
 # (empirically derived mean sentiment intensity rating increase for booster words)
