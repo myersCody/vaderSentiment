@@ -453,7 +453,10 @@ class SentimentIntensityAnalyzer(object):
 
 if __name__ == '__main__':
     # --- examples -------
-    sentences = ["VADER is smart, handsome, and funny.",      # positive sentence example
+    analyzer = SentimentIntensityAnalyzer() #Class starts on line #199
+    
+    def demo_basic_sentences():
+        sentences = ["VADER is smart, handsome, and funny.",  # positive sentence example
                 "VADER is not smart, handsome, nor funny.",   # negation sentence example
                 "VADER is smart, handsome, and funny!",       # punctuation emphasis handled correctly (sentiment intensity adjusted)
                 "VADER is very smart, handsome, and funny.",  # booster words handled correctly (sentiment intensity adjusted)
@@ -464,103 +467,159 @@ if __name__ == '__main__':
                 "The book was kind of good.", # qualified positive sentence is handled correctly (intensity adjusted)
                 "The plot was good, but the characters are uncompelling and the dialog is not great.", # mixed negation sentence
                 "At least it isn't a horrible book.", # negated negative sentence with contraction
-                "Make sure you :) or :D today!",     # emoticons handled
+                "Make sure you :) or :D today!",      # emoticons handled
                 "Today SUX!",    #  negative slang with capitalization emphasis
                 "Today only kinda sux! But I'll get by, lol" # mixed sentiment example with slang and constrastive conjunction "but"
-                 ]
-    
-    analyzer = SentimentIntensityAnalyzer()
-    
-    print("----------------------------------------------------")
-    print(" - Analyze typical example cases, including handling of:")
-    print("  -- negations")
-    print("  -- punctuation emphasis & punctuation flooding")
-    print("  -- word-shape as emphasis (capitalization difference)")
-    print("  -- degree modifiers (intensifiers such as 'very' and dampeners such as 'kind of')")
-    print("  -- slang words as modifiers such as 'uber' or 'friggin' or 'kinda'")
-    print("  -- contrastive conjunction 'but' indicating a shift in sentiment; sentiment of later text is dominant")
-    print("  -- use of contractions as negations")
-    print("  -- sentiment laden emoticons such as :) and :D")
-    print("  -- sentiment laden slang words (e.g., 'sux')")
-    print("  -- sentiment laden initialisms and acronyms (for example: 'lol') \n")
-    for sentence in sentences:
-        vs = analyzer.polarity_scores(sentence)
-        print("{:-<65} {}".format(sentence, str(vs)))
-    print("----------------------------------------------------")
-    print(" - About the scoring: ")
-    print("""  -- The 'compound' score is computed by summing the valence scores of each word in the lexicon, adjusted 
-     according to the rules, and then normalized to be between -1 (most extreme negative) and +1 (most extreme positive). 
-     This is the most useful metric if you want a single unidimensional measure of sentiment for a given sentence.  
-     Calling it a 'normalized, weighted composite score' is accurate.""")
-    print("""  -- The 'pos', 'neu', and 'neg' scores are ratios for proportions of text that fall in each category (so these   
-     should all add up to be 1... or close to it with float operation).  These are the most useful metrics if 
-     you want multidimensional measures of sentiment for a given sentence.""")
-    print("----------------------------------------------------")
-    
-    input("\nPress Enter to continue the demo...\n") # for DEMO purposes...
-    
-    tricky_sentences = ["Sentiment analysis has never been good.",
-                        "Sentiment analysis has never been this good!",
-                        "Most automated sentiment analysis tools are shit.",
-                        "With VADER, sentiment analysis is the shit!",
-                        "Other sentiment analysis tools can be quite bad.",
-                        "On the other hand, VADER is quite bad ass!",
-                        "Roger Dodger is one of the most compelling variations on this theme.",
-                        "Roger Dodger is one of the least compelling variations on this theme.",
-                        "Roger Dodger is at least compelling as a variation on the theme."
-                        ]
-    print("----------------------------------------------------")
-    print(" - Analyze examples of tricky sentences that cause trouble to other sentiment analysis tools.")
-    print("  -- special case idioms - e.g., 'never good' vs 'never this good', or 'bad' vs 'bad ass'.")
-    print("  -- special uses of 'least' as negation versus comparison \n")
-    for sentence in tricky_sentences:
-        vs = analyzer.polarity_scores(sentence)
-        print("{:-<69} {}".format(sentence, str(vs)))
-    print("----------------------------------------------------")
-    
-    input("\nPress Enter to continue the demo...\n") # for DEMO purposes...
-    
-    print("----------------------------------------------------")
-    print(" - VADER works best when analysis is done at the sentence level (but it can work on single words or entire novels).")
-    paragraph = "It was one of the worst movies I've seen, despite good reviews. Unbelievably bad acting!! Poor direction. VERY poor production. The movie was bad. Very bad movie. VERY BAD movie!"
-    print("  -- For example, given the following paragraph text from a hypothetical movie review:\n\t'{}'".format(paragraph))
-    print("  -- You could use NLTK to break the paragraph into sentence tokens for VADER, then average the results for the paragraph like this: \n")
-    # simple example to tokenize paragraph into sentences for VADER
-    from nltk import tokenize
-    sentence_list = tokenize.sent_tokenize(paragraph)
-    paragraphSentiments=0.0
-    for sentence in sentence_list:
-        vs = analyzer.polarity_scores(sentence)
-        print("{:-<69} {}".format(sentence, str(vs["compound"])))
-        paragraphSentiments += vs["compound"]
-    print("AVERAGE SENTIMENT FOR PARAGRAPH: \t" + str(round(paragraphSentiments/len(sentence_list), 4)))
-    print("----------------------------------------------------")
-    
-    input("\nPress Enter to continue the demo...\n") # for DEMO purposes...
+        ]
         
-    print("----------------------------------------------------")
-    print(" - Analyze sentiment of IMAGES/VIDEO data based on annotation 'tags' or image labels. \n")
-    conceptList = ["balloons", "cake", "candles", "happy birthday", "friends", "laughing", "smiling", "party"]
-    conceptSentiments=0.0
-    for concept in conceptList:
-        vs = analyzer.polarity_scores(concept)
-        print("{:-<15} {}".format(concept, str(vs['compound'])))
-        conceptSentiments += vs["compound"]
-    print("AVERAGE SENTIMENT OF TAGS/LABELS: \t" + str(round(conceptSentiments/len(conceptList), 4)))
-    print("\t")
-    conceptList = ["riot", "fire", "fight", "blood", "mob", "war", "police", "tear gas"]
-    conceptSentiments=0.0
-    for concept in conceptList:
-        vs = analyzer.polarity_scores(concept)
-        print("{:-<15} {}".format(concept, str(vs['compound'])))
-        conceptSentiments += vs["compound"]
-    print("AVERAGE SENTIMENT OF TAGS/LABELS: \t" + str(round(conceptSentiments/len(conceptList), 4)))
-    print("----------------------------------------------------")
+        #Prints that explain this Demo
+        print("----------------------------------------------------")
+        print(" - Analyze typical example cases, including handling of:")
+        print("  -- negations")
+        print("  -- punctuation emphasis & punctuation flooding")
+        print("  -- word-shape as emphasis (capitalization difference)")
+        print("  -- degree modifiers (intensifiers such as 'very' and dampeners such as 'kind of')")
+        print("  -- slang words as modifiers such as 'uber' or 'friggin' or 'kinda'")
+        print("  -- contrastive conjunction 'but' indicating a shift in sentiment; sentiment of later text is dominant")
+        print("  -- use of contractions as negations")
+        print("  -- sentiment laden emoticons such as :) and :D")
+        print("  -- sentiment laden slang words (e.g., 'sux')")
+        print("  -- sentiment laden initialisms and acronyms (for example: 'lol') \n")
+        
+        #------Actual Sentiment Analysis------#
+        for sentence in sentences:
+            vs = analyzer.polarity_scores(sentence) #returns dict containing floats of pos, neg, neu
+            print("{:-<65} {}".format(sentence, str(vs))) #TODO: Figure out why he used ":-<65" in the first format replace
+        #-------------------------------------#
+        
+        #Prints that explain scoring
+        print("----------------------------------------------------")
+        print(" - About the scoring: ")
+        print("""  -- The 'compound' score is computed by summing the valence scores of each word in the lexicon, adjusted 
+        according to the rules, and then normalized to be between -1 (most extreme negative) and +1 (most extreme positive). 
+        This is the most useful metric if you want a single unidimensional measure of sentiment for a given sentence.  
+        Calling it a 'normalized, weighted composite score' is accurate.""")
+        print("""  -- The 'pos', 'neu', and 'neg' scores are ratios for proportions of text that fall in each category (so these   
+        should all add up to be 1... or close to it with float operation).  These are the most useful metrics if 
+        you want multidimensional measures of sentiment for a given sentence.""")
+        print("----------------------------------------------------")
     
+    demo_basic_sentences()
+    input("\nPress Enter to continue the demo...\n") # for DEMO purposes...
+    
+    def demo_tricky_sentences():
+        tricky_sentences = ["Sentiment analysis has never been good.",
+                            "Sentiment analysis has never been this good!",
+                            "Most automated sentiment analysis tools are shit.",
+                            "With VADER, sentiment analysis is the shit!",
+                            "Other sentiment analysis tools can be quite bad.",
+                            "On the other hand, VADER is quite bad ass!",
+                            "Roger Dodger is one of the most compelling variations on this theme.",
+                            "Roger Dodger is one of the least compelling variations on this theme.",
+                            "Roger Dodger is at least compelling as a variation on the theme."
+                            ]
+        
+        #Prints that explain tricky sentences
+        print("----------------------------------------------------")
+        print(" - Analyze examples of tricky sentences that cause trouble to other sentiment analysis tools.")
+        print("  -- special case idioms - e.g., 'never good' vs 'never this good', or 'bad' vs 'bad ass'.")
+        print("  -- special uses of 'least' as negation versus comparison \n")
+        
+        #------Actual Sentiment Analysis------#
+        for sentence in tricky_sentences:
+            vs = analyzer.polarity_scores(sentence)
+            print("{:-<69} {}".format(sentence, str(vs))) #TODO: Uses 69 instead of 65, but why? 
+        #-------------------------------------#
+        print("----------------------------------------------------")
+    demo_tricky_sentences()
+    input("\nPress Enter to continue the demo...\n") # for DEMO purposes...
+    
+    def demo_paragraph():
+        paragraph = "It was one of the worst movies I've seen, despite good reviews. Unbelievably bad acting!! Poor direction. VERY poor production. The movie was bad. Very bad movie. VERY BAD movie!"
+        
+        #We can use NLTK to break up paragraphs into sentences for the best possible analysis
+        print("----------------------------------------------------")
+        print(" - VADER works best when analysis is done at the sentence level (but it can work on single words or entire novels).")
+        print("  -- For example, given the following paragraph text from a hypothetical movie review:\n\t'{}'".format(paragraph))
+        print("  -- You could use NLTK to break the paragraph into sentence tokens for VADER, then average the results for the paragraph like this: \n")
+        
+        #------Actual Sentiment Analysis------#
+        from nltk import tokenize #example of using NLTK to break a paragraph into sentences. 
+        sentence_list = tokenize.sent_tokenize(paragraph)
+        paragraphSentiments=0.0
+        for sentence in sentence_list:
+            vs = analyzer.polarity_scores(sentence)
+            print("{:-<69} {}".format(sentence, str(vs["compound"]))) #grr.. why 69 instead of 65
+            paragraphSentiments += vs["compound"]
+        #-------------------------------------#
+        
+        #Takes Average
+        print("AVERAGE SENTIMENT FOR PARAGRAPH: \t" + str(round(paragraphSentiments/len(sentence_list), 4)))
+        print("----------------------------------------------------")
+        
+        #CDM 20171025
+        # I have concerns/questions about whether or not to use NLTK:  
+        
+        ### Concern Zero ###
+        # I am a little skeptical about the integrity of data if we use
+        # NLTK to perform sentiment analysis on paragraphs. My fear is that since
+        # the lines are being averaged together would that provided an opportunity
+        # of skewed sentiment results?
+        
+        # For example, if a paragraph contain a series of midly nice token, but one
+        # token is the most negitive thing on the internet. How does that look?
+        # e.g. Does a paragraph of [-1,.24,.44,.334,.56,.32, .58] which averages 
+        # out to .21 actually display the culture of the community? Which it
+        # might very well be that that is the case. 
+        
+        ### Concern One ###
+        # Would outliers be a problem? I have no idea to be honest, but
+        # what if a linux torvalds joins a community?  
+        
+        ### Concern Two ###
+        # I really don't like the example paragraph because all of the data inputs
+        # are negitive numbers. It will be important for us to see what happens
+        # with a mix of possitive and negitive numbers and how the average plots
+        
+        # TODO: Write a test suite for the NTLK paragraph parcer that contains 
+        # contains both positive and negitive sentences. 
+        
+    demo_paragraph()
+    input("\nPress Enter to continue the demo...\n") # for DEMO purposes...
+    
+    def demo_tags():
+        
+        # Positive Labels
+        print("----------------------------------------------------")
+        print(" - Analyze sentiment of IMAGES/VIDEO data based on annotation 'tags' or image labels. \n")
+        #------Actual Sentiment Analysis------#
+        conceptList = ["balloons", "cake", "candles", "happy birthday", "friends", "laughing", "smiling", "party"]
+        conceptSentiments=0.0
+        for concept in conceptList:
+            vs = analyzer.polarity_scores(concept)
+            print("{:-<15} {}".format(concept, str(vs['compound']))) #why 15?
+            conceptSentiments += vs["compound"]        
+        #-------------------------------------#
+        
+        # Negitive Labels
+        print("AVERAGE SENTIMENT OF TAGS/LABELS: \t" + str(round(conceptSentiments/len(conceptList), 4)))
+        print("\t")
+        #------Actual Sentiment Analysis------#
+        conceptList = ["riot", "fire", "fight", "blood", "mob", "war", "police", "tear gas"]
+        conceptSentiments=0.0
+        for concept in conceptList:
+            vs = analyzer.polarity_scores(concept)
+            #why 15? I don't understand where these numbers are coming from/
+            print("{:-<15} {}".format(concept, str(vs['compound']))) 
+            conceptSentiments += vs["compound"]
+        #-------------------------------------#
+        print("AVERAGE SENTIMENT OF TAGS/LABELS: \t" + str(round(conceptSentiments/len(conceptList), 4)))
+        print("----------------------------------------------------")
+    
+    demo_tags()
     ("\nPress Enter to continue the demo...") # for DEMO purposes...
     
-    do_translate = input("\nWould you like to run VADER demo examples with NON-ENGLISH text? (Note: requires Internet access) \n Type 'y' or 'n', then press Enter: ")
-    if do_translate.lower().lstrip() == 'y':
+    def demo_different_languages():
         print("/n----------------------------------------------------")
         print(" - Analyze sentiment of NON ENGLISH text...for example:")
         print("  -- French, German, Spanish, Italian, Russian, Japanese, Arabic, Chinese")
@@ -599,5 +658,8 @@ if __name__ == '__main__':
             vs = analyzer.polarity_scores(translation)
             print("- {: <8}: {: <69}\t {} ({})".format(languages[nonEnglish_sentences.index(sentence)], sentence, str(vs['compound']), translator_name))
         print("----------------------------------------------------")
-
+    
+    do_translate = input("\nWould you like to run VADER demo examples with NON-ENGLISH text? (Note: requires Internet access) \n Type 'y' or 'n', then press Enter: ")
+    if do_translate.lower().lstrip() == 'y':
+        demo_different_languages()
     print("\n\n Demo Done!")
