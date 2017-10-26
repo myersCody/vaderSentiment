@@ -1,0 +1,260 @@
+Leif Andersen
+RacketCon 2017 should have a code of conduct, as pointed out by Claire on twitter, and I absolutely agree. 
+It doesn't have to be anything fancy, and can be a fairly standard one.
+Although we are not co-located with Strange Loop this year, they have a fairly sensible one that we could use, which is adapted from the one from the geek feminism wiki [3].
+Does anyone have any opinions on what we use? I would also be happy to add it to the RacketCon web page.
+
+Alexis King
++1 from me. I think the Strange Loop CoC is a good one to emulate. 
+
+Stephen
+Awesome. (It's an opinion)
+
+Sam Caldwell
+I agree that we should have one.
+
+Jack Firth
+Agreed. 
+Possibly with someone(s) to be the official point of contact for issues related to it.
+
+Neil Van Dyke
+Good point.  
+The Strange Loop policy looks OK to me.  
+Another one I think is OK is FSF LibrePlanet's. 
+Racket is an usually good community (which is the biggest reason I'm here), and I really don't expect any problem at RacketCon.  
+But I know that these kinds of policies have been necessary and helpful, from time to time, at some other events. 
+Given that, an event communicating such a policy is a welcoming act. 
+Also, it can help inclusiveness to sanity check one's own Racket materials, occasionally.  Especially in the context of Racket, with its involvement in education and IT, where inclusiveness is an especially high priority.
+(To acknowledge one of my own recent oopses: maybe a few weeks ago, I excised, from some Racket writing of mine, some innocuous parody lyrics to the tune of a 1980s top-40 song, when I realized that the original song could be discouraging in a Racket context.)  
+I don't want to think about some of the much more exclusionary things I've realized I've done inadvertently over the years.  
+All I can do is try to be conscientious, and continue to learn.) 
+
+Matthias Felleisen
+A code of conduct is a totally stupid idea for RacketCon. 
+Racketeers were raised properly by their parents and are well behaved. 
+I really hate attending conferences that need to impose a code. 
+
+Daniel Prager
++1 for a code of conduct from me.
+Although I can only rarely attend RacketCon (coming from Australia) codes of conduct seem to have had a net positive effect at local conferences: enhancing inclusivity and tone.
+Perhaps one day such codes can be optimized away, but in the present day requiring these contracts makes for explicit and efficient exception handling.
+
+Neil Van Dyke
+Unfortunately, event "codes of conduct" started, in part, as reactions to actual bad behavior at some (non-Racket) events. 
+I agree that RacketCon doesn't need a code of conduct to tell people how to behave.  
+But people relatively new to Racket might not know that.   
+Hence, the conventional "code of conduct", or maybe simply a statement that affirms that everyone is welcome. 
+For all I know, the following might suffice as a welcoming statement. :)
+
+Deren Dohoda
+I don't believe virtue signaling can ever substitute for actual virtue. 
+If, however, a failure to signal virtue is interpreted as a vice, then this is a sticky situation indeed. 
+There is the argument that if everyone behaved we wouldn't need laws, but there is also the argument that people still misbehave even with laws. 
+I do not have shoulders high enough to stand on to get a clear view of this topic (I'm quite sure such heights have never been reached). 
+What I do know is that I resent CoCs as much as I resent software agreements which I must acquiesce to in order to use something. 
+I don't believe they are a good idea. But in the end I always click "agree" and install the software anyway. 
+
+Stephen
+As a middle-aged white heterosexual male I've never needed a COC. 
+It is my understanding that clear COCs (that are enforced) are valuable in that they reduce the both the incidence and impact of discrimination and harassment.
+Kind regards
+
+Claire Alvis
+Not all people at the conference will be Racketeers.
+Not all people at the conference will have the same definition of "raised properly by their parents".
+Not all people considering attending the conference will know whether or not this is a safe community.
+Some may be unwilling to spend the money to attend RacketCon without knowing ahead of time that they are meant to be welcome.
+Some may not be interested in a community that refuses to explicitly say toxic people are unwelcome.
+If you all have a definition of what "raised properly by their parents" means, writing down that definition both deters potentially toxic people from attending and, more importantly, attracts people who have previously had bad experiences at programming language conferences.
+A code of conduct is a simple signal of inclusivity and it helps people decide whether a community is worth their time and energy.
+I don't doubt that you all will continue to treat each other with respect (and deal with people who are not respectful) with or without a code of conduct.
+But I would suggest by not being explicit, you are making an unfortunate tradeoff: excluding a set of people who could otherwise be valuable members of your community by leaving the door open for toxicity.
+Needless to say, as a RacketCon attendee, Racket observer, and person who has experienced harassment and other inappropriate behavior at conferences in the past, +1 for a code of conduct.
+
+Matt Jadud
+I'm with Claire 100%.
+I think the code of conduct proposed as a starting point is completely reasonable.
+So, "+1."
+Cheers,
+
+Jos Koot
+IMHO both Matthias and Claire Alvis (and others) have valuable points, how contradictory this may be, though. 
+When the great majority of attendees consists of well behaving people there can be enough social control without a code of conduct. 
+I agree that with well educated people only, we would not need laws, but I am also aware of the fact that only a small group of bad attendees can ruin very much. 
+I would not be harrased by a code of conduct, for probably it would match my own code. 
+I never attended RacketCon. 
+Would like it very much, but never had the opportunity to arrange the voyage. 
+I watch the videos. 
+Nevertheless my point of view as presented above. 
+
+Spencer Florence
++1 more for a Code of Conduct
+
+Matthias Felleisen
+Our CoC should state that this conference is so welcoming that we don’t need one. 
+The recursion fits. 
+
+William J Bowman
+If men were angels... +1 for a CoC. 
+
+Andrew Gwozdziewycz
+I used to run a Meetup in NYC called "Hack and Tell." 
+For the first 5 years or something I kind of expected people to just be nice to each other, and do the right thing. 
+Then, I started having private conversations with people, some women, some POC, and realized they had bad interactions that I just simply wasn't aware of. 
+So, yeah, it's nice to think that people will behave and do the right thing, but it's not guaranteed, and everyone will have a *better* experience if there's a code of conduct and it's taken seriously and enforced. 
++1000 on having a code of conduct. 
+Sorry, Matthias. 
+
+Vincent Nys
+Strange Loop one looks good.
+
+Annaia Berry
+I will always 100% support the adoption of a CoC drafted by people with experience in dealing with discrimination, harassment, and toxic behaviour. 
+It is impossible to understate just how much gets swept under the rug without one, and increasingly, the lack of one itself tends to attract toxic people who use terms like "virtue signalling" unironically. 
+The GFW/Strange Loop CoC is well worn and considered and would be as good as any we'd be liable to come up with ourselves. 
+Nothing about a document saying "hey, don't be an ass" implies that the reader themselves, or the community, are asses. 
+Only that the community values not being an ass, and those who might wish to join that community and not be an ass are welcome, and that those who have had to deal with too many asses will hopefully find fewer here. 
+For the unconvinced, I really appreciated Graydon Hoare's perspective on why he implemented the Rust CoC.
+
+Norman
+If the document literally said just 'hey, don't be an ass', or 'don't be a git', or 'c'mon, behave', then that would be fine.
+Perhaps it could have a footnote saying 'Surely you can tell when you're being a git -- 
+if you for some reason have difficulty with this, then see [link]'.  
+A text like that presumes that the reader is grown-up, but indicates, for the avoidance of doubt, that adult civility is indeed expected in the meeting. 
+The problem with the longer text, such as the Strange Loop one[1], is that it's manifestly _very_ hard to come up with a text that doesn't radiate censoriousness; 
+and however much this isn't the literal implication of the text, it does implant the notion that the reader or the community has behaviour problems.  
+That text does not radiate 'you are welcome' -- it tells me, 'we have so many gits roaming the corridors of our conference that we have to police them'.  
+In its phrasing, a text like this appears to presume that the reader is an undersocialised thug, who needs to be given an extensive but non-exhaustive list of things to remember not to do.  One has to carefully suppress one's initial reaction to it, and smile sweetly. 
+
+Also, any text like that almost inevitably acquires a legalistic air, and just screams out for disputation, and the reddit thread... 
+...seems to corroborate this. 
+
+To clarify, this remark is about communication and presentation.  
+The underlying wish to encourage civility is entirely laudable, and the experience of being on the wrong end of careless or careful incivility would be entirely unpleasant and deplorable, and a conference should aim to discourage such incivility by any available effective mechanisms. 
+
+If, after all, the only effective mechanism is a rule-book such as is being discussed, then can I commend the FreeBSD code [2] which I think communicates the underlying goals very well, even though it's primarily intended to cover behaviour online, rather than face-to-face.
+To my ear it benefits from a very slightly old-fashioned air, including the rather old-fashioned implication that 'we're sure this stuff doesn't really need to be said, but since you ask...' 
+
+Stephen
+I would suggest that it is more important to get a COC on the RacketCon website than it is to argue over the wording. 
+I would suggest that every day that passes without a CoC on the website adds to the risk that possible racketcon participants might decide not to go... to the detriment of the Racket community.
+I really love how welcoming this community is - even more than I love the ideas you put into or expressed with Racket. It is your greatest strength.
+Kind regards
+
+Annaia Berry
+Bluntly, if someone finds the admonition to refrain from harassment "censorious", then it is likely they are exactly the sort of person that a Code of Conduct is in fact designed to make feel unwelcome.
+This is a feature, not a design flaw.
+
+Deren Dohoda
+These are invariably motte and bailey style arguments and the notion that the only reason I or anyone else could possibly resent CoCs is some desire to abuse their absence is astonishing. 
+How you could not find such groupthink "censorious" is beyond my ability to sympathize with.
+I can only reiterate that CoCs are not some kind of dealbreaker for me personally but as this is an open discussion I will just say I don't think they're all benefit and no cost. 
+My disagreement on this matter does not constitute an admission of guilt; to abuse a racket construct: there's a bug in your contract spec, it's blaming the wrong party.
+
+Neil Van Dyke
+This is not my call, but in the traditional Racket convention of everyone voicing thoughts... 
+One gentle way to communicate awareness and intent of inclusiveness: 
+"The Racket community enjoys and appreciates a collegial and helpful atmosphere, in which everyone feels welcome.  
+We expect that everyone will have a good experience at RacketCon, and that everyone will help to make it a good experience for everyone else.  
+Any concerns or suggestions, small or large, please feel encouraged to approach any conference organizer or core Racket person." 
+What the above doesn't address: whether there should be a CoC explicit itemization of rules.
+There's a breadth of thoughtful opinions on that question, and it's complicated.
+My thoughts have changed a bit as a result of this thread, and a decision would seem to come down to balancing goals and guessing, so I'd just like to toss out a few thoughts: 
+* It is important to acknowledge that inclusiveness is an issue, and to communicate good intent about inclusiveness. 
+That's part of what people are looking for. 
+* Some of the CoCs that people cited in this thread included rules that I know *aren't* universally-accepted in broad IT conference circles.   
+(One, relatively light, example: many people assume that everyone at a conference doesn't mind being photographed and tagged in Facebook and such, but I've heard from a few PL people who absolutely do mind, to the point that they've avoided some events for that reason.  
+The heavier examples include things like very different ideas about the appropriateness of "flirting" in various contexts, and different understandings of how discouraging unwanted attention like that can be.)  
+Whether there will be sufficient universally-accepted behavior in future years of RacketCon, as it hopefully grows, I don't know. 
+* I think that Racket is an unusually (not "usually"; typo in an earlier message) good community, and, AFAIK, has a good track record on inclusiveness.  
+(Though I want to see a lot more female names in "From:" headers on this email list!) 
+* I suspect Fortune 500 corporate lawyers could go either way (on CoC vs. welcoming statement), out of purely risk-averse intent. 
+Racket is not a Fortune 500, and it is driven mostly by universities, which are supposed to have broadly constructive intent. 
+* Sometimes a gentle position is blind to problems.  
+In this particular case, I suspect we can afford gentle. 
+* I think this is probably a situation in which implicit high expectations elevate everyone. 
+* There's been a lot of awareness-raising in this thread, and in recent history of other conferences, which helps. 
+* In activism, some of the most encouraging stories are from when something was starting to go bad, but then people stepped up, with grace.  
+(Ambiguity: when is the occasion to step up, and what is the graceful move.) 
+
+Jack Firth
+The important point is that a CoC is a choice to prioritize the safety, welfare, and happiness of minority groups over the privilege of individuals to say / do whatever they want. 
+Sure, you might say that's a tradeoff, and sure, you could call that censorship, but whatever "cost" there is of hypothetically blaming a party inappropriately is worth paying ten times over for the benefit of making traditionally less-welcomed people more included. 
+I guarantee you the incidents a CoC is designed to prevent occur *far* more often than any incidents of mis-applying the CoC to an innocent individual. 
+Not realizing that is willful ignorance.
+
+Deren Dohoda
+If by whiskey, Jack.
+Your guarantees on this matter are unenforceable and therefore meaningless, and any further comment on my ignorance will likely violate any CoC you care to throw your weight behind, so best get it out now because you can't unring this bell.
+
+Neil Van Dyke
+I think this thread has gotten delightfully meta, in that I've heard that some people who would like to contribute in forums get scared away when observing interaction styles that they find very confrontational. 
+Not that I always remember this myself, and I also make other mistakes, but... 
+When talking in a forum, we might believe that a particular person can take a particular style, though we know that the style would be too spirited to use with someone else.  
+But such a someone else might see that interaction, not know the style is selective, and not want to go anywhere near that discussion. 
+The Racket community is usually good about online tone.  But I suppose this thread topic is more important and emotional than most of our technical threads, and there's a lot of good intent behind that. 
+
+Brian Mastenbrook
+I think you might be reading something in to this request that's not meant by those who are asking for it. 
+You are right to be proud of the Racket community today and I don't think anyone here is implying otherwise. 
+Having a code of conduct does not mean that us Racketeers are not well behaved or that we need to impose a code to keep us in line. 
+What it does is outline what we consider to be bad behavior, defines some of the possible consequences, and makes it clear who is responsible for handling violations. 
+The point of doing this is to make sure that any possible violations of the expected behavior aren't fatal to the environment that the Racket developers have worked hard to create. 
+If you don't specify this, it's not at all clear what to do in the event of a violation and some (many?) people may decide it's not worth the risk of dealing with unspecified consequences. 
+This should sound familiar. 
+We all use a programming environment that does this despite being good programmers who were taught properly by our professors, because programs are complex and sometimes we make mistakes. 
+Humans are a lot more complex than programs, and having been raised with the virtues of humility and open-mindedness by our parents, we should all be willing to admit the possibility of errors in the human domain too.
+In both cases the goal isn't to be punitive or restrictive but to make sure that the environment is protected. 
+
+If it turns out that the safety mechanisms were unnecessary, then RacketCon will be the type of conference that doesn't need to have a code but has one anyway. 
+Isn't that better than the alternative? 
+
+Matthias Felleisen
+Everyone: this discussion is the first time that we have a rough tone on this mailing list, and this tone is inappropriate. 
+I am appealing to both sides to cool it down. 
+We (the organizers and old people of this community) appreciate all non-emotional input. 
+Science and science organizations are explicitly not about democracy but we intend to listen to your ‘technical’ inputs in this matter. 
+
+Mark Wunsch
+In an attempt to be more "scientific" about this I would point to the writing and actions of some other prominent language communities, as they have made the argument FOR having a CoC much better than I could. 
+Before that, I think we (as practitioners and members of a technical community) should accept that the reports of harassment, exclusion, and even assault are startling and far more numerous then any of us should feel comfortable with.
+One question that comes to mind is "Does the Racket community believe it is immune from the issues that these other communities believe should be addressed, and if so why?" Scientific communities have long embraced codes of ethics and conduct.
+Consider that a Code of Conduct is a mechanism that explicitly articulates those things that the Racket community leaders might see as implicit to making the community successful.
+
+Leif Andersen
+I agree with Matthias here, this mailing list should absolutely remain civil.
+I want to thank everyone for their feedback so far. It seems we have reached a fix point as to what the community wants wrt a CoC. 
+I am inclined to that at this point we should hand it off to the main RacketCon organizers and let them decide what to do. 
+(They are running the show after all.) 
+I would be happy to do the technical work of submitting a PR to the website, but I will leave it to one of the organizers to decide if they want to merge it or not.
+Thank you again for your input
+
+Hendrik Boom
+What does PL mean? 
+
+Leif Andersen
+Programming Languages
+
+Greg Hendershott
+I'm strongly in favor. 
+We could evaluate this simply as a "community development and marketing" proposition. 
+We want more people using Racket. 
+We want more people at RacketCon. 
+A familiar CoC will welcome more people. 
+Framed that way, I think even _I_ could blurt out the answer fast enough for Matthias to hand me a Realm of Racket book. :D 
+
+Vincent St-Amour
+Thank you all for your comments, and thank you Claire and Leif for bringing this to our attention. 
+We (the RacketCon organizers) have decided to adopt the SNAPL code of conduct (based on the ACM's) for RacketCon. You can find it on the RacketCon web page[1]. 
+Hope to see you all in Seattle! 
+
+Norman
+A excellent choice: pretty near unexceptionable. 
+Except (typo-level things I noticed). 
+You write 'ofprogram design', missing a space. 
+Deriving the text from the SNAPL one, you've changed '...unwelcome or hostile behavior of an ad hominem nature, i.e., that focuses not on ideas but on people and identity' into '...unwelcome or hostile behavior, that is, behavior that focuses on people instead of ideas'.   
+The first version glosses 'ad hominem', but the second appears to gloss 'hostile behavior' instead.
+If the intention was simply to rewrite the latinism 'ie', then you may have deleted a phrase too much and inadvertently garbled the sense.  
+If the intention was to avoid 'ad hominem' as well, then perhaps simply '...unwelcome or hostile behavior that focuses on people instead of ideas'. 
+Layout: wow -- the 70s are back (in a good way). 
+All the best, 
