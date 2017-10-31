@@ -1,0 +1,2 @@
+mozilla:
+  next_page: https://api.github.com/repos/devtools-html/debugger.html/issues/comments?per_page=100
