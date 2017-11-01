@@ -56,3 +56,6 @@ Temporary Items
 # personal notes and help
 *.notes
 *.help
+
+#GithubCommentRetriever Log
+/Emilys_Data/GithubCommentRetriever.log
