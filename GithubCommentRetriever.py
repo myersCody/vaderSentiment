@@ -1,11 +1,22 @@
 import requests
 import json
 import os
-import yaml #pip install pyyaml
+import logging
+import datetime
+import time
+
+#May require installs
+import yaml              #sudo pip install pyyaml
+from pathlib import Path #sudo pip install pathlib //install not needed for python3
+
+#Global Variables
+LOGFILENAME = 'GithubCommentRetriever.log'
+SAVEFILE    = 'save.yaml'
+DATADIRNAME = '/Emilys_Data/'
+
 
 class GithubCommentRetriever():
-    '''This class follows google doc string standards as well as pep8 styling
-    NOTE: For more information about the github api visit: 
+    '''NOTE: For more information about the github api visit: 
     https://docs.google.com/document/d/1VTt7edWW2N5Wg8_H-Lbct5cYMohgnhgtzIzOSZbNtqs/edit?usp=sharing
     '''
     def __init__(self):
@@ -16,8 +27,15 @@ class GithubCommentRetriever():
         self.repo_name       = ''                                                               #<string> Name o fthe repo on github
         self.next_page       = ''                                                               #<string> url to the next github api page of comments
         self.comments        = []                                                               #<list: string> all of the commments collected
-        self.data_dir        = os.path.dirname(os.path.realpath(__file__)) + '/Emilys_Data/'    #<string> the file path for a directory you use to save your data
+        self.data_dir        = os.path.dirname(os.path.realpath(__file__)) + DATADIRNAME        #<string> the file path for a directory you use to save your data
         
+    def set_logging_info(self):
+        '''Setups the log file for the logging library'''
+        log_path = "".join([self.data_dir, LOGFILENAME]) #most efficent method for concatinating two strings
+        Path(log_path).touch()                           #performs a linux touch command
+        logging.basicConfig(format='%(asctime)s : %(message)s', filename=log_path, level=logging.DEBUG, datefmt='%m/%d%Y %I:%M:%S %p')
+        return True
+    
     def set_github_info(self,dir_name,repo_owner,repo_name,comment_type):
         '''
         Sets instance variables that are used in multiple methods.
@@ -42,11 +60,30 @@ class GithubCommentRetriever():
         A warning messaging notifing the user that we hit the rate limit
         '''
         print "---------------WARNING---------------"
-        print "We hav ehit our rate limit for accessing the github api information."
+        print "We have reached our rate limit for accessing the github api information."
         print "The rate limit should be reset in about in hour. For more information"
         print "visit: https://developer.github.com/v3/#rate-limiting"
         print "-------------------------------------"
-        return True        
+        return True
+        
+    def check_rate_limit(self):
+        '''Prints infomation regarding the rate limit to the user'''
+        rate_url  = 'https://api.github.com/rate_limit'
+        r         = requests.get(rate_url)
+        raw       = r.json()
+        info_dict = raw['rate']
+        print "Rate Limit Max: {}".format(info_dict['limit'])
+        print "Request Remaining: {}".format(info_dict['remaining'])
+        print "Reset time: {}".format(self.convert_unix_time(info_dict['reset']))
+        return True
+        
+    def convert_unix_time(self, epoch_seconds):
+        '''The reset time is returned as a UTC string, this method converts the
+        string into your local time'''
+        greenwich_time = datetime.datetime.utcfromtimestamp(int(epoch_seconds))
+        eastern_time   = greenwich_time - datetime.timedelta(hours=4)
+        return eastern_time
+        
         
     def recover_comments(self):
         '''
@@ -54,63 +91,76 @@ class GithubCommentRetriever():
         Github api has a rate limit of 60 pages per hour. 
         '''
         if self.next_page == '':
-            self.next_page = self.basic_url.format(self.repo_owner,self.repo_name) + self.comment_type + '?per_page=100'
+            self.next_page = ''.join([self.basic_url.format(self.repo_owner,self.repo_name),self.comment_type,'?per_page=100'])
+        logging.info(self.next_page)
         r = requests.get(self.next_page)
         raw = r.json()
         links = r.links
-        if r.status_code != 200:
-            self.save_place()
-            if r.status_code == 403:
-                self.save_place()
-                self.rate_limit_message() #optional
+        logging.debug(str(links))
+        if r.status_code != 200:            
+            if r.status_code == 403: #rate limit message is opptional                
+                self.rate_limit_message()
+                logging.warning("Error: {0} Github Api call was unsuccessful. The rate limit was likly met for github api calls.".format(r.status_code))
+            else:
+                logging.warning("Error: {0} Github Api call was unsuccessful".format(r.status_code))
             return r.status_code
         else:
-            try: 
-                self.next_page = links['next']['url'] #[4]
+            try:                                            
                 for comment in raw:
                     comment = comment['body']
-                    # It is essential to encode our comment returns, 
-                    # fails if not converted
-                    comment = comment.encode('utf-8')  
-                    self.comments.append(comment)
+                    comment = comment.encode('utf-8') #Essential for elements outside of ascii range(128)
+                    self.comments.append(comment)                
+                try:
+                    self.next_page = links['next']['url'] #[4]
+                except Exception as e:
+                    logging.info('End of recursive cycle.')
+                    return True
                 self.recover_comments()
-            except:
+                
+            except Exception as e:                
+                logging.warning(e)
                 return True
         
     def write_comments(self):
         '''
-        This method writes all of the comments to an output file
+        This method writes all of the comments to an output file.
         '''
-        file_dir   = self.data_dir + self.dir_name        
-        #Check to make sure directory exist
-        dir_status = os.path.isdir(file_dir)
+        file_dir = "".join([self.data_dir,self.dir_name])
+        dir_status = os.path.isdir(file_dir) #Make sure directory exist
         if dir_status == False:
             os.mkdir(file_dir)
-        #create filename & file path
-        filename  = self.dir_name + '.txt'
-        file_path = file_dir + '/' + filename
-        #append comments to file
+        filename  = "".join([self.dir_name,'.txt']) #create Filename
+        file_path = "".join([file_dir,'/',filename]) #create filepath
         f = open(file_path, "a+")
-        for comment in self.comments:
+        for comment in self.comments: #add comments to file
             try: 
-                line = comment + '\n'
+                line = "".join([comment,'\n'])
                 f.write(line)
             except Exception as e:
-                print line
-                print e
+                logging.debug('e')
+                logging.debug('Failed to write line: ({}) to file.'.format(line)) 
                 pass
         f.close()
+        return True
     
     def save_place(self):
-        file_path = self.data_dir + 'save.yaml'
-        data = {str(self.dir_name):{'next_page':self.next_page}}
-        with open(file_path, 'a') as outfile:
+        '''This method allows us to save where we have stopped so that we can 
+        continue after our rate limit timeout is up. '''
+        logging.warning('A save place was triggered for url: {}'.format(self.next_page))
+        #file_path = self.data_dir + 'save.yaml'
+        file_path = "".join([self.data_dir,SAVEFILE])
+        data = {str(self.dir_name):{'next_page':self.next_page}} #Sets up our config file format
+        #used w to prevent duplicate keys
+        #old save data is located in the logs
+        with open(file_path, 'w') as outfile: 
             yaml.dump(data, outfile, default_flow_style=False)
         outfile.close()
         return True
         
     def read_save_file(self):
-        file_path = self.data_dir + 'save.yaml'
+        '''This method coverts our save yaml file in to a dictionary so that we 
+        can continued from our last stopping point.'''
+        file_path = "".join([self.data_dir,SAVEFILE])
         try:
             with open(file_path, 'r') as ymlfile:
                 cfg = yaml.load(ymlfile)
@@ -118,29 +168,25 @@ class GithubCommentRetriever():
         except Exception as e:
             print e
             return False
-        
     
     def main(self):
+        '''You MUST run self.set_github_info before running main.'''
+        self.set_logging_info
         cfg = self.read_save_file()
         try: #Check to see if there is any save file data
             cfg[self.dir_name]
             self.next_page = cfg[self.dir_name]['next_page']
         except Exception as e:
             pass
-        status = self.recover_comments()
+        status = self.recover_comments()              
+        self.save_place()
         if self.comments != []:
             self.write_comments()
+        self.check_rate_limit()
         
 if __name__ == '__main__':
-    ''' The github api[0] requires certain structures to recover comments from repos
-        * commit comments structure [1]: GET /repos/:owner/:repo/comments 
-        * issue comments structure [2]:  GET /repos/:owner/:repo/issues/comments 
-        * pull request comments [3]:     GET /repos/:owner/:repo/pulls/comments
-        Examples:
-        * curl -i https://api.github.com/repos/devtools-html/debugger.html/issues/comments?page=1&per_page=100
-        * curl -i https://api.github.com/repos/devtools-html/debugger.html/issues/comments?per_page=100
-    '''
     github_tool = GithubCommentRetriever()
-    #print "Mozilla"
-    github_tool.set_github_info('mozilla','devtools-html','debugger.html','/issues/comments')    
-    github_tool.main()    
+    '''Mozilla Data'''    
+    #github_tool.set_github_info('mozilla','devtools-html','debugger.html','/issues/comments') #Completed on 20171030
+    #github_tool.set_github_info('mozilla','devtools-html','debugger.html','/pulls/comments')  #Completed on 20171101
+    github_tool.main()
