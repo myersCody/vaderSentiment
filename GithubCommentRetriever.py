@@ -33,7 +33,7 @@ class GithubCommentRetriever():
         '''Setups the log file for the logging library'''
         log_path = "".join([self.data_dir, LOGFILENAME]) #most efficent method for concatinating two strings
         Path(log_path).touch()                           #performs a linux touch command
-        logging.basicConfig(format='%(asctime)s : %(message)s', filename=log_path, level=logging.DEBUG, datefmt='%m/%d%Y %I:%M:%S %p')
+        logging.basicConfig(format='%(asctime)s : %(message)s', filename=log_path, level=logging.DEBUG, datefmt='%m/%d/%Y %I:%M:%S %p')
         return True
     
     def set_github_info(self,dir_name,repo_owner,repo_name,comment_type):
@@ -171,7 +171,7 @@ class GithubCommentRetriever():
     
     def main(self):
         '''You MUST run self.set_github_info before running main.'''
-        self.set_logging_info
+        self.set_logging_info()
         cfg = self.read_save_file()
         try: #Check to see if there is any save file data
             cfg[self.dir_name]
@@ -185,8 +185,20 @@ class GithubCommentRetriever():
         self.check_rate_limit()
         
 if __name__ == '__main__':
+    """Steps:
+    1) run set_github_info in order for the class to work properly
+    2) ensure that you want the data in your save point in save.yaml (if there is any)
+    3) run python GithubCommentRetriever.py
+    4) rename the file and place it in the correct directory.
+    5) repeat
+    """
     github_tool = GithubCommentRetriever()
     '''Mozilla Data'''    
     #github_tool.set_github_info('mozilla','devtools-html','debugger.html','/issues/comments') #Completed on 20171030
     #github_tool.set_github_info('mozilla','devtools-html','debugger.html','/pulls/comments')  #Completed on 20171101
+    '''Linux Data'''
+    #github_tool.set_github_info('linux','torvalds','linux','/issues/comments') #Completed on 20171107
+    #github_tool.set_github_info('linux','torvalds','linux','/pulls/comments')  #Completed on 20171107 (I want to check this, we should have more than two pages)
+    '''Racket Data'''
+    github_tool.set_github_info('racket','racket','racket','/issues/comments')
     github_tool.main()

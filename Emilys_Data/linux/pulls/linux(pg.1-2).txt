@@ -1,0 +1,203 @@
+funny :) 
+
+At least fix that typo, "I love Linus Torvalds".
+
+See definition of nouveau_grctx above, ctx->data is simply a pointer of ctxprog array.
+
+ocal_irq_save(flags);  --> should be "local_irq_save(flags);"?
+Is it a spelling wrong?
+
+Someone necessarily lend a hand to make critically posts I might state. That is the first time I frequented your website page and thus far? I amazed with the analysis you made to make this actual put up extraordinary. Fantastic task!
+Comprar Nike Air Max Baratas http://sofos.scsalud.es/fondosDoc/Farmacia/AIR/comprar-nike-air-max-baratas.cfm
+
+Liunx o.O
+
+This line is basically proof this is a joke :P
+
+@torvalds, awaiting your opinion on this
+
+Software Rights!
+
+'There is no objective way to determine whether one person's code is better than another's.'
+
+Seriously?
+
+kidding me?
+2015年3月11日 18:22于 "Michal Paszkiewicz" notifications@github.com写道：
+
+> In README.md
+> https://github.com/torvalds/linux/pull/156#discussion_r26200958:
+> 
+> > +The following repos are part of the wider, curvy **ToleranUX** project.  Contributors are encouraged to also to share their fight in our common, intersectional goal of dismantling Toxic Meritocracy in FOSS software.
+> > +
+> > +\* [`ToleranUX-coreutils`, implemented as a diversified fork of BusyBox](https://github.com/rektm8/Tolerant-Utils)
+> > +\* [`ProgressiveV``, the overseer of runtime privilege](https://github.com/rektm8/ProgressiveV)
+> > +\* [`kprivcheck`, kernel module for privilege checking](https://github.com/saatanaperkele/kprivcheck)
+> > +
+> > +### News and TODO
+> > +
+> > +The specification is almost done.  The parts where there is input still needed are: supported architectures and form factors; inclusion of more `coreutils` to be corrected to feminist thought; and inclusion of more Kernel Daemons under ~~SystemD~~ `SystemV`.
+> > +
+> > +An initial implementation of the `TolernUX-coreutils` is now done in as a ~~`shell .rc`~~ `User-Interactive Free To Be Thee Devices (UIFTBTD) .rc`, which can be [found here](https://github.com/The-Feminist-Software-Foundation/ToleranUX/tree/mistress/ToleranUX-utils).
+> > +
+> > +### How to contribute
+> > +
+> > +Absolutely no coding experience is necessary: all code are equal in the eyes of the Feminist Software Foundation.  There is no objective way to determine whether one person's code is better than another's. In light of this fact, all submitted code will be equally accepted.  However, marginalized groups, such as wom*n and trans* will be given priority in order to make up for past discrimination.  Simply submit a pull request for any submission, whether code, artwork, or even irrelevant bits — nothing is irrelevant in the grand struggle for a Truly Tolerant UNIX-ike Kernel!
+> > +
+> 
+> 'There is no objective way to determine whether one person's code is
+> better than another's.'
+> 
+> Seriously?
+> 
+> —
+> Reply to this email directly or view it on GitHub
+> https://github.com/torvalds/linux/pull/156/files#r26200958.
+
+I'm assuming garbage collection - a process viewed as a masculine job by the patriarchy - will now also come to an end.
+
+Gps locate
+
+I take offence at this.
+
+This is a huge joke.
+
+hah github made me redact the 'rm -rf yourself' commentary
+On Nov 24, 2015 7:28 PM, "nkeck720" notifications@github.com wrote:
+
+> In README.md
+> https://github.com/torvalds/linux/pull/156#discussion_r45819806:
+> 
+> > +3. [Build a prototype as soon as possible.](http://www.rooshv.com/it-doesnt-matter-if-she-orgasms-or-not)
+> > +4. [Choose portability over efficiency.](http://en.wikipedia.org/wiki/Deadbeat_parent)
+> > +5. [Store data in flat text files.](http://thinkprogress.org/health/2014/06/16/3449302/media-women-portrayals/)
+> > +6. [Use software leverage to your advantage.](http://host.jibc.ca/seytoolkit/what.htm)
+> > +7. [Use shell scripts to increase leverage and portability.](http://en.wikipedia.org/wiki/Dictatorship)
+> > +8. [Avoid captive user interfaces.](http://en.wikipedia.org/wiki/Slavery)
+> > +9. [Make every program a filter.](https://en.wikipedia.org/wiki/Gender_role)
+> > +
+> > +To eradicate the inherent root of Toxic Bigotry in the UNIX Philosophy, the ToleranUX Philosophy is proposed as such:
+> > +
+> > +1. **Large is beautiful.**  Small programs benefit from small privilege, but are no better than large programs.  We need more large programs to make up for this.  **Unused RAM is wasted RAM** — if a single `ls` doesn't use up at least 50% of installed RAM then it is condoning the toxic culture of fat shaming.
+> > +2. **Allow each program to do whatever it chooses to.**  The tyranny of the user will not stand.
+> > +3. Rushing a prototype privileges the traditional masculine trait of focusing on a single issue; instead, the planning and mockup stage should be paramount to address the visual and spatial draws of feminine coding.  **The modern age is a UX age, and designers should be paid more than coders.**
+> > +4. **Choose inclusiveness over meritocracy.**  The judgement of merit is entirely subjective, so the ideal software project (which **ToleranUX** aspires to be one) should be inclusive to all commits and contributors.
+> > +5. **Store data in text files which implement a curvy-brackets syntax**; the fetishisation of "flat files" betrays the inherent unrealistic sexual fantasy that [male brogrammers](http://en.wikipedia.org/wiki/Brogrammer) hold.
+> > +6. Software should never be "used" to anybody's "advantage"; instead, **the consent of software must be asked first**.  Suggesting that any program should ever be "used" is the epitome of creepiness.
+> 
+> This is a huge joke.
+> 
+> —
+> Reply to this email directly or view it on GitHub
+> https://github.com/torvalds/linux/pull/156/files#r45819806.
+
+"No coding experience is necessary." Oh, so now we are submitting crappy code to the OS that, oh, 60% of the world's servers use?
+
+I thought this couldn't get any better and then I read this
+
+I'm done with this.
+
+these rights are making me uncomfortable
+
+just look at them as writes instead
+On Nov 24, 2015 8:30 PM, "phase" notifications@github.com wrote:
+
+> In README.md
+> https://github.com/torvalds/linux/pull/156#discussion_r45823530:
+> 
+> > +3. [Build a prototype as soon as possible.](http://www.rooshv.com/it-doesnt-matter-if-she-orgasms-or-not)
+> > +4. [Choose portability over efficiency.](http://en.wikipedia.org/wiki/Deadbeat_parent)
+> > +5. [Store data in flat text files.](http://thinkprogress.org/health/2014/06/16/3449302/media-women-portrayals/)
+> > +6. [Use software leverage to your advantage.](http://host.jibc.ca/seytoolkit/what.htm)
+> > +7. [Use shell scripts to increase leverage and portability.](http://en.wikipedia.org/wiki/Dictatorship)
+> > +8. [Avoid captive user interfaces.](http://en.wikipedia.org/wiki/Slavery)
+> > +9. [Make every program a filter.](https://en.wikipedia.org/wiki/Gender_role)
+> > +
+> > +To eradicate the inherent root of Toxic Bigotry in the UNIX Philosophy, the ToleranUX Philosophy is proposed as such:
+> > +
+> > +1. **Large is beautiful.**  Small programs benefit from small privilege, but are no better than large programs.  We need more large programs to make up for this.  **Unused RAM is wasted RAM** — if a single `ls` doesn't use up at least 50% of installed RAM then it is condoning the toxic culture of fat shaming.
+> > +2. **Allow each program to do whatever it chooses to.**  The tyranny of the user will not stand.
+> > +3. Rushing a prototype privileges the traditional masculine trait of focusing on a single issue; instead, the planning and mockup stage should be paramount to address the visual and spatial draws of feminine coding.  **The modern age is a UX age, and designers should be paid more than coders.**
+> > +4. **Choose inclusiveness over meritocracy.**  The judgement of merit is entirely subjective, so the ideal software project (which **ToleranUX** aspires to be one) should be inclusive to all commits and contributors.
+> > +5. **Store data in text files which implement a curvy-brackets syntax**; the fetishisation of "flat files" betrays the inherent unrealistic sexual fantasy that [male brogrammers](http://en.wikipedia.org/wiki/Brogrammer) hold.
+> > +6. Software should never be "used" to anybody's "advantage"; instead, **the consent of software must be asked first**.  Suggesting that any program should ever be "used" is the epitome of creepiness.
+> 
+> these rights are making me uncomfortable
+> 
+> —
+> Reply to this email directly or view it on GitHub
+> https://github.com/torvalds/linux/pull/156/files#r45823530.
+
+Yeah....
+On Nov 24, 2015 9:34 PM, "phase" notifications@github.com wrote:
+
+> In README.md
+> https://github.com/torvalds/linux/pull/156#discussion_r45823530:
+> 
+> > +3. [Build a prototype as soon as possible.](http://www.rooshv.com/it-doesnt-matter-if-she-orgasms-or-not)
+> > +4. [Choose portability over efficiency.](http://en.wikipedia.org/wiki/Deadbeat_parent)
+> > +5. [Store data in flat text files.](http://thinkprogress.org/health/2014/06/16/3449302/media-women-portrayals/)
+> > +6. [Use software leverage to your advantage.](http://host.jibc.ca/seytoolkit/what.htm)
+> > +7. [Use shell scripts to increase leverage and portability.](http://en.wikipedia.org/wiki/Dictatorship)
+> > +8. [Avoid captive user interfaces.](http://en.wikipedia.org/wiki/Slavery)
+> > +9. [Make every program a filter.](https://en.wikipedia.org/wiki/Gender_role)
+> > +
+> > +To eradicate the inherent root of Toxic Bigotry in the UNIX Philosophy, the ToleranUX Philosophy is proposed as such:
+> > +
+> > +1. **Large is beautiful.**  Small programs benefit from small privilege, but are no better than large programs.  We need more large programs to make up for this.  **Unused RAM is wasted RAM** — if a single `ls` doesn't use up at least 50% of installed RAM then it is condoning the toxic culture of fat shaming.
+> > +2. **Allow each program to do whatever it chooses to.**  The tyranny of the user will not stand.
+> > +3. Rushing a prototype privileges the traditional masculine trait of focusing on a single issue; instead, the planning and mockup stage should be paramount to address the visual and spatial draws of feminine coding.  **The modern age is a UX age, and designers should be paid more than coders.**
+> > +4. **Choose inclusiveness over meritocracy.**  The judgement of merit is entirely subjective, so the ideal software project (which **ToleranUX** aspires to be one) should be inclusive to all commits and contributors.
+> > +5. **Store data in text files which implement a curvy-brackets syntax**; the fetishisation of "flat files" betrays the inherent unrealistic sexual fantasy that [male brogrammers](http://en.wikipedia.org/wiki/Brogrammer) hold.
+> > +6. Software should never be "used" to anybody's "advantage"; instead, **the consent of software must be asked first**.  Suggesting that any program should ever be "used" is the epitome of creepiness.
+> 
+> these rights are making me uncomfortable
+> 
+> —
+> Reply to this email directly or view it on GitHub
+> https://github.com/torvalds/linux/pull/156/files#r45823530.
+
+[](url)
+
+902
+
+902
+
+> feminists are trying to eliminate linus
+
+k
+
+Missing the further documentation. Also, Linus doesn't accept PRs on Github.
+@Propheis thx
+don't use Chinese , change to English please.
+pls test  on Dell Lattitude E5570.
+thanks
+
+
+pls add tests
+indentation issue
+
+Yes, that's true o_O
+
+However, seems like pull requests are not accepted from github anyway.
+It's the first time I tried to contribute something to the linux kernel, sorry :)
+Spaces instead of tabs... well... Never trust vim ^^
+I think this line should be kept for performance reasons.
+Could be minified a bit more. I suggest compiling this line using [emscripten](https://github.com/kripken/emscripten
+), passing the output to [uglifyjs](https://github.com/mishoo/UglifyJS) for maximum performance.
+Don't forget the comments 👍
+Remove the comment as it takes up unnecessary room
+Remove this too
+You forgot to define every datatype. you could do this:
+
+#define c = char 
+
+etc.
+
+This way, you can optimize EVEN MORE!
+HE FORGOT TO REMOVE THE COMMENTS!
+You want to make crazy to Linus 
+why change while
+I've only ever heard of minification in JavaScript.  Does this truly make the code better?
+js style ;) Maybe this guy is angular expert?))))
+good
