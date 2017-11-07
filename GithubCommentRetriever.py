@@ -80,9 +80,10 @@ class GithubCommentRetriever():
     def convert_unix_time(self, epoch_seconds):
         '''The reset time is returned as a UTC string, this method converts the
         string into your local time'''
-        greenwich_time = datetime.datetime.utcfromtimestamp(int(epoch_seconds))
-        eastern_time   = greenwich_time - datetime.timedelta(hours=4)
-        return eastern_time
+        greenwich_time        = datetime.datetime.utcfromtimestamp(int(epoch_seconds))
+        eastern_time          = greenwich_time - datetime.timedelta(hours=5)
+        standard_eastern_time = datetime.datetime.strftime(eastern_time,"%m/%d/%Y %I:%M:%S %p")
+        return standard_eastern_time
         
         
     def recover_comments(self):
@@ -113,6 +114,7 @@ class GithubCommentRetriever():
                 try:
                     self.next_page = links['next']['url'] #[4]
                 except Exception as e:
+                    logging.info(e)
                     logging.info('End of recursive cycle.')
                     return True
                 self.recover_comments()
@@ -200,5 +202,6 @@ if __name__ == '__main__':
     #github_tool.set_github_info('linux','torvalds','linux','/issues/comments') #Completed on 20171107
     #github_tool.set_github_info('linux','torvalds','linux','/pulls/comments')  #Completed on 20171107 (I want to check this, we should have more than two pages)
     '''Racket Data'''
-    github_tool.set_github_info('racket','racket','racket','/issues/comments')
+    #github_tool.set_github_info('racket','racket','racket','/issues/comments') #Completed on 20171107
+    #github_tool.set_github_info('racket','racket','racket','/pulls/comments')  #Completed on 20171107
     github_tool.main()

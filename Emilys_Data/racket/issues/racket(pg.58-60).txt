@@ -1,0 +1,1507 @@
+LGTM
+I think the implementation is wrong, because the start page for "The Racket Reference" says the `racket` library includes `racket/logging`
+
+http://docs.racket-lang.org/reference/index.html
+Well, it certainly isn't re-exprted by racket/main.rkt. So one of them is wrong. Again, I am happy to fix them, I just need to know which way we want to go.
+I think the docs should change, instead of the implementation.
+
+> On Aug 8, 2017, at 12:26 PM, Leif Andersen <notifications@github.com> wrote:
+> 
+> Well, it certainly isn't re-exprted by racket/main.rkt. So one of them is wrong. Again, I am happy to fix them, I just need to know which way we want to go.
+> 
+> —
+> You are receiving this because you are subscribed to this thread.
+> Reply to this email directly, view it on GitHub, or mute the thread.
+> 
+
+A status update:
+
+1. I've gotten permission from most people who have contributed to Racket, which is great. I'm confident we'll be able to complete the switch, barring unforseen changes.
+2. Not everyone has responded yet, including some people who have made notable contributions. For some of these people, I'm still working on finding the best means of contacting them. 
+I, William Gallard Hatch, give permission to license my contributions to Racket under the MIT/Apache 2 license.  I have used the email addresses william@hatch.uno and maybe willghatch@gmail.com for contributions.
+
+Note that "contributions to Racket" here means contributions to any projects that are dependencies of the `main-distribution` package as of January 2017.  I specify just so that people in the future don't argue that I've also granted these licenses for other Racket libraries that I have made or will make when I don't necessarily intend for them to be a part of the core Racket distribution.
+
+
+Sorry for the delay, as I let this drop from my radar after not getting around to it immediately after seeing the notification about it.  Though my contributions so far are extremely minor anyway.
+
+I'm curious what the "other issues" of LGPLv3 are that are mentioned.
+Thanks very much for the detailed investigation and report! I think you are completely correct, and I'll add your repair and a test.
+Some people might be dead hence you might have to track down their estate also.
+A different change could be making `reader` a `deftech` at the beginning of Section 1.3 and move the third paragraph of **1.3.18 Reading via an Extension** there.
+I can confirm on Linux with DrRacket 6.10.
+This looks like a good change. If my `refman` comment is correct (I didn't try it to make sure), that would be a little better, but I'm happy to merge either way.
+
+I can easily believe that rearranging the docs could be even better, since I have trouble following the cross-references myself. 
+With futures, IO causes blocking. There is more information here: http://docs.racket-lang.org/guide/parallelism.html
+Oh wow. So I just retried this with 6.10 to see if it had magically been fixed in the interim, but it hasn't. So I tried a couple of things. It turns out running `./slideshow` from the `Racket v6.10/bin` directory works *fine*. But running it via the symlink farm I have terminates with `SIGSEGV`.
+
+Here are reproduction instructions, assuming that `~/Racket v6.10/` exists and has the obvious content:
+
+```sh
+cd
+mkdir qq
+cd qq
+ln -s ~/Racket\ v6.10/ c
+ln -s c/bin/ b
+./b/slideshow
+```
+
+And for me, it `SIGSEGV`s. This is OSX 10.12.6. Running `./c/bin/slideshow` works fine. (These instructions are a slight abstraction of the real setup I use.)
+
+Er, never mind, I forgot to do `(require racket/serialize)`, closing.
+LGTM
+How about `struct-info`?
+
+https://docs.racket-lang.org/reference/inspectors.html#%28def._%28%28quote._~23~25kernel%29._struct-info%29%29
+@shhyou 
+```racket
+> (struct s (v))
+> (struct-info (s 0))
+#f
+#t
+> 
+```
+Right, but you need a more powerful inspector:
+
+```
+#lang racket/base
+
+(struct s (v) #:inspector (make-inspector))
+(struct-info (s 0))
+;; #<struct-type:s>
+;; #f
+```
+
+The page @shhyou linked to explains inspectors:
+<https://docs.racket-lang.org/reference/inspectors.html>
+@bennn How do I change a defined structure?
+I'm not sure what you mean.
+
+Do you want to get the struct type of a struct that's defined in another file & doesn't use `#:inspector` ? I'm not sure how to do that. If you could:
+
+1. save `(current-inspector)`
+2. set `(current-inspector (make-inspector))`
+3. evaluate the struct definitions
+
+then it'd be possible to use the saved inspector with `struct-type`. But I really don't know how to do step 3.
+If you're using a `#:transparent` struct instead of an opaque one, you don't need a more powerful inspector:
+
+```racket
+> (struct s (v) #:transparent)
+> (struct-info (s 0))
+#<struct-type:s>
+#f
+```
+
+If your struct isn't transparent, you probably shouldn't be reflecting over it with `struct-type` unless you're making something like a debugger or other program instrumentation tool. But if you are, using a more powerful inspector is a reasonable approach.
+I'm implementing a DSL that needs to compare the two struct types.
+@bennn 
+```racket
+> (current-inspector (make-inspector))
+> (struct x (a))
+> (x 0)
+#<x>
+> (struct-info (x 0))
+#f
+#t
+> 
+```
+@zaoqi Here's how to do steps 1 and 4 in @bennn's suggestion:
+```
+> (define insp (current-inspector))
+> (current-inspector (make-inspector))
+> (struct x (a))
+> (struct-info (x 0))
+#f
+#t
+> (parameterize ([current-inspector insp])
+     (struct-info (x 0)))
+#<struct-type:x>
+#f
+```
+
+@zaoqi Why not just use `#:transparent` for your structs?
+Or perhaps provide your own `struct` to the user in the library
+@shhyou Can I redifine `struct`?
+Just put `recursive-contract` around the part that needs to be delayed:
+
+```
+#lang racket/base
+
+(require racket/contract)
+
+(define (sizedstream/c t)
+  (or/c null?
+       (cons/c t (recursive-contract (sizedstream/c t)))
+       (promise/c (recursive-contract (sizedstream/c t)))))
+
+(define/contract s1
+  (sizedstream/c integer?)
+  (cons 1 (cons 2 (cons 3 '()))))
+```
+@bennn 
+https://github.com/zaoqi/zKanren/blob/master/stream.rkt
+```racket
+(define (promise+/c t)
+  (or/c
+   t
+   (promise/c (recursive-contract (promise+/c t)))))
+```
+Something like this (simply shadows the `struct` binding from #lang)
+
+```
+; my-lib.rkt
+#lang racket
+(provide (rename-out [my-struct struct]))
+(define-syntax my-struct
+  (syntax-rules ()
+    [(_ x ...) (struct x ... #:transparent)]))
+```
+
+```
+#lang racket
+(require "my-lib.rkt")
+(struct x ())
+(struct-info (x))
+```
+
+I think that a better example is probably a function one that accepts two contracts and returns a contract on lists that alternate those elements, one after the other. And then use it in a `#:rest` argument on an `->` contract.
+
+This would require some English to motivate and explain, tho. 
+
+You could start with an even-length list of integers and work your way up?
+@shhyou 
+```racket
+(define (struct-type-eq? x y)
+  (let-values ([(tx _x) (struct-info x)] [(ty _y) (struct-info y)])
+    (equal? tx ty)))
+```
+Can I define it like this?
+I've just stumbled upon the exact situation of a client refusing to deal with *GPL licenses. What's the chance that Racket 6.11 will be relicensed to MIT/Apache 2?
+I like `even-length-list/c`, that seems simple & useful to me.
+
+I'm thinking we should leave it at this:
+- I don't want to add more English, because I don't want to distract from the main point of "how do I use `recursive-contract` at all?"
+- I'd rather the contract isn't a function, because then it's really obvious when you've got it wrong. If you remove `recursive-contract` from this example then `define` raises an exception.
+![screen shot 2017-08-28 at 11 51 24](https://user-images.githubusercontent.com/1731829/29781335-e3574b3c-8be6-11e7-9fa0-37905226ae0a.png)
+
+Okay, that all makes sense. And I do think that something in the guide section on contracts is where to discuss adding a contract like `hash` has.
+You can make this as a macro (and in fact I just did that on a project yesterday)
+
+```racket
+(define-simple-macro (singleton-struct id:id)
+  (begin
+    (struct the-struct () #:reflection-name 'id)
+    (define id (the-struct))))
+```
+
+A `sugar-struct` package might be a good place to put this
+When you are happy with it, please go ahead and push the commit. Thanks!
+What are you trying to do?
+
+What's the error message you're seeing?
+I'm writing up a PR for this
+@bennn 
+```
+> (promise+-fmap-flip (delay 0) (λ (x) (+ x 1)))
+. . promise+-fmap-flip: broke its own contract
+  two of the clauses in the or/c might both match: b and (promise/c (recursive-contract (or/c b (promise/c (recursive-contract (promise+/c t))))))
+  produced: #<promise:unsaved-editor:15:6>
+  in: the range of
+      (->
+       (or/c
+        (and/c not-promise? a)
+        (promise/c
+         (recursive-contract (promise+/c t))))
+       (-> a b)
+       (or/c
+        b
+        (promise/c
+         (recursive-contract (promise+/c t)))))
+  contract from: (function promise+-fmap-flip)
+  blaming: (function promise+-fmap-flip)
+   (assuming the contract is correct)
+  at: unsaved-editor:11.18
+```
+Ok, so the problem is that:
+
+```
+two of the clauses in the or/c might both match: b and (promise/c ....)
+```
+
+This is because `b` can match anything, including a promise.
+
+I think you want `b` to be parametric over anything but a promise. But `racket/contract` can't express bounded parametric polymorphism.
+
+Here's two ideas:
+1. use a weaker contract; instead of `(spromise+/c a)` use `(spromise+/c any/c)` and explain the function's behavior with a comment
+2. try the contracts in this library: https://github.com/thinkmoore/bounded
+What is the problem?
+
+(same for #1790 and #1789 , I'm not sure what the issue is)
+@bennn https://docs.racket-lang.org/reference/hashtables.html:
+Racket doesn't support immutable-weak-hash.
+https://docs.racket-lang.org/reference/data-structure-contracts.html#%28def._%28%28lib._racket%2Fcontract%2Fprivate%2Fmisc..rkt%29._promise%2Fc%29%29
+@bennn Racket doesn't support set/c and hash/c.
+```racket
+(set/c c) → contract?
+--
+c : contract?
+
+(hash/c k v) → contract?
+--
+k : contract?
+v : contract?
+```
+@bennn Racket doesn't support it.
+It is supported. Please see the documentation on ephemerons. 
+@rfindler What's ephemerons?
+`racket/contract` provides a `hash/c` 
+<https://docs.racket-lang.org/reference/data-structure-contracts.html#%28def._%28%28lib._racket%2Fcontract%2Fprivate%2Fhash..rkt%29._hash%2Fc%29%29>
+
+`racket/set` provides a `set/c`
+<https://docs.racket-lang.org/reference/sets.html?q=set%2Fc#%28def._%28%28lib._racket%2Fset..rkt%29._set%2Fc%29%29>
+https://docs.racket-lang.org/reference/ephemerons.html?q=ephemeron#%28tech._ephemeron%29
+@zaoqi I think you might be better served by using the [Racket users mailing list](https://groups.google.com/forum/#!forum/racket-users) for your questions. You're creating several github issues for things it seems you have done very little research on, or perhaps you just need a few pointers from someone more experienced (and the mailing list would be an excellent place to ask for guidance if you are confused and/or cannot find something).
+Do you remember the exact command you ran? And what platform was that on?
+FWIW, printing is fine at the command-line.
+raco i think
+@bennn `(spromise+/c any/c)`=`any/c`
+@bennn `b` can be a promise.
+@pnwamk I can't use *.google.com
+test-engine is in the htdp repo.
+
+On Thu, Aug 17, 2017 at 1:28 PM, Matthias Felleisen <
+notifications@github.com> wrote:
+
+> This program
+>
+> #lang racket
+> (require (only-in pict rectangle colorize))
+> (require test-engine/racket-tests)
+> (check-expect (colorize (rectangle 4 4) "blue") (colorize (rectangle 4 4) "red"))
+> (test)
+>
+> yields this error message:
+>
+> Ran 1 check.
+> 0 checks passed.
+> 	Actual value differs from the expected value.
+> ..  :eulav lautcA  :eulav detcepxE
+>
+>  In /Users/matthias/svn/2HtDP/Images/bug-test.rkt at line 4 column 0
+>
+> Note the reversal of the word "actual value".
+>
+> Note 1: I have not been able to produce the error with a smaller example,
+> not involving Pict.
+> Note 2: Otherwise I would have guessed that it has something to do with
+> test-engine.
+>
+> —
+> You are receiving this because you are subscribed to this thread.
+> Reply to this email directly, view it on GitHub
+> <https://github.com/racket/racket/issues/1774>, or mute the thread
+> <https://github.com/notifications/unsubscribe-auth/AAYWsFTgOyIY3vbcVM8tbpoV6-mw5xEyks5sZIZOgaJpZM4O6o6E>
+> .
+>
+
+Oh, I see what Matthias means now. It is almost certainly a test-engine bug.
+
+In general I think we should be ok with managing issues in general on this repo, since lots of people won't know which repo things belong in. Of course, @mfelleisen isn't most people ... :)
+
+If you had read my submission, you would know that I know. 
+
+
+> On Sep 2, 2017, at 8:55 AM, Sam Tobin-Hochstadt <notifications@github.com> wrote:
+> 
+> In general I think we should be ok with managing issues in general on this repo, since lots of people won't know which repo things belong in. Of course, @mfelleisen <https://github.com/mfelleisen> isn't most people ... :)
+> 
+> —
+> You are receiving this because you were mentioned.
+> Reply to this email directly, view it on GitHub <https://github.com/racket/racket/issues/1774#issuecomment-326745447>, or mute the thread <https://github.com/notifications/unsubscribe-auth/ABf5-3E_SKA6L2uixBv5gAr29MHepZPEks5seV5vgaJpZM4O6o6E>.
+> 
+
+
+Then maybe you don't want an `or/c` ?
+?
+Ah -- my apologies for the oversight.
+
+In my humble opinion, that's definitely something the Racket community should look into (i.e. if users cannot reasonably access the mailing list, where is the next best place to post questions? or is there a workaround? etc) -- and maybe someone else has some suggestions.
+
+Obviously @zaoqi isn't the only person affected by this. I would hope there is something that works well for everyone that isn't the repository's issue tracker as a general forum for Q&A (at least that's my two cents worth on the matter).
+There's the Slack channel [racket.slack.com](http://racket.slack.com/), but you'll need to join via [racket-slack.herokuapp.com](https://racket-slack.herokuapp.com/) first. There's also the #racket IRC channel on freenode.net. @zaoqi, are either of those available to you? Either would likely get you quicker answers to your questions.
+I'm not sure how a weak immutable hash could work. When a key is no longer reachable, it would have to be removed from the hash. But the hash is immutable, so removing it would violate the semantics of immutability.
+You could wrap the contents of the promise in a single-field struct. That would let `or/c` tell the difference between a recursive promise and a normal value:
+
+```racket
+(struct done ([value #:mutable]) #:transparent)
+(define (done/c t) (struct/c done t))
+(define (done-map f d) (done (f (done-value d))))
+
+(define (promise+/c t)
+  (or/c
+   (done/c t)
+   (promise/c (recursive-contract (promise+/c t)))))
+
+(define/contract (promise+-fmap-flip x f)
+  (let ([a (new-∀/c 'a)] [b (new-∀/c 'b)])
+    (-> (promise+/c a) (-> a b) (promise+/c b)))
+  (if (promise? x)
+      (delay (promise+-fmap-flip (force x) f))
+      (done-map f x)))
+
+;; evaluates to (done 1)
+(force (promise+-fmap-flip (delay (done 0)) add1))
+```
+
+The struct is used as an immutable wrapper even though the `value` field is marked mutable. This is because [`struct/c`](http://docs.racket-lang.org/reference/data-structure-contracts.html?q=struct%2Fc#%28form._%28%28lib._racket%2Fcontract%2Fprivate%2Fstruct-dc..rkt%29._struct%2Fc%29%29) only allows [flat](http://docs.racket-lang.org/reference/contracts.html?q=struct%2Fc#%28tech._flat._contract%29) and [chaperone](http://docs.racket-lang.org/reference/contracts.html?q=struct%2Fc#%28tech._chaperone._contract%29) contracts on immutable fields, but [`new-∀/c`](http://docs.racket-lang.org/reference/parametric-contracts.html?q=new#%28def._%28%28lib._racket%2Fcontract%2Fparametric..rkt%29._new-~e2~88~80%2Fc%29%29) is an [impersonator](http://docs.racket-lang.org/reference/contracts.html?q=impersonator#%28tech._impersonator._contract%29) contract. Impersonator contracts can pretend to be arbitrarily different values when wrapping a value, which can violate the semantics of immutability.
+Also, I think the [`lazy`](https://docs.racket-lang.org/reference/Delayed_Evaluation.html?q=lazy#%28form._%28%28lib._racket%2Fpromise..rkt%29._lazy%29%29) form does what you're trying to do. It allows you to return either a normal value or a promise, and the result promise automatically forces the inner promise (if present).
+@jackfirth 
+`promise+` is sized.
+```racket
+(define r (delay r))
+```
+The lazy form doesn't do what I'm trying to do.
+https://github.com/jasonhemann/microKanren/blob/master/microKanren.scm
+Thanks!
+@mflatt Can you look through my implementation notes?
+This also might be easier if the package catalog served both HTML and s-exp data for packages from the same URL using content negotiation. There wouldn't need to be any sort of URL templating enforced on the package catalog, it'd just have to respond differently based on the Accept header.
+Here's the start of the referenced code: https://github.com/racket/scribble/blob/master/scribble-lib/help/search.rkt#L63
+@jeapostrophe Looks generally good. I had forgotten about `current-pkg-catalog-file`, and it seems like a fine local catalog to use by default and update on demand; that's the same one used by the GUI package manager. As you and I discussed, I think we'll need a new configuration (as set by `raco pkg config` and reported via `setup/dirs`) to configure a target from links from package names.
+
+@jackfirth If I understand what you mean, that's difficult or impossible with the current S3-backed setup.
+@mflatt Yes, the current setup makes this difficult. An alternative setup using a pull-based model with AWS CloudFront instead of S3 would make it much easier, but I can open a separate issue for that. My point is that we already have a URL identifying where to get a package from, so adding a second URL and a URL template that catalogs are required to support adds unnecessary complexity and out of band information to the package catalog protocol.
+As far as I can tell, the part that's going wrong is on the server side, although it's JavaScript sent back to the browser. The URL is parsed using string operations, and a "label" query is converted using `unescape` in JavaScript, which does not decode `+` into a space.
+
+To avoid the immediate problem, I see advice like
+https://stackoverflow.com/questions/12042592/decoding-url-parameters-with-javascript,
+but surely that's not the right approach.
+
+The deeper problem is that the JavaScript code shouldn't try to do its own parsing of a URL string. The obviously better choice is to use the `URL` class in JavaScript... but apparently `URL` is new and not always supported by browsers???
+
+So, it seems like a stupid question, but: How do I correctly and portably parse a URL in JavaScript to extract a query value?
+This suggests that you can use URL with high probability: http://caniuse.com/#feat=url
+And if you want a backup solution for IE, here's a polyfill: https://github.com/webcomponents/URL
+Part of the cause here is that the [HTTP URI scheme RFC](https://tools.ietf.org/html/rfc7230#section-2.7.1) does not standardize any format whatsoever for the query string; it can basically be any blob of characters. The `foo=1&bar=2` syntax is purely by convention of (nearly all) implementations. Many servers and clients have slightly different interpretations and formatting rules with no clear indication which set of rules is "correct".
+@blerner I've updated docs.racket-lang.org. Does using "F1" in DrRacket now work?
+Looks like it helps: F1 on `scene+line` yields the URL `http://docs.racket-lang.org/search/search-context.html?q=scene%2Bline&hq=O%3A%7B+L%3Alang%2Fhtdp-beginner+T%3Ateachpack+T%3Apicturing-programs+%7D&label=Beginning+Student` which then seems to work properly -- at least, on Linux, in Chromium and in Firefox.  I can't test on the lab machines right now, because I don't have access to changing their config myself, but it _should_ suffice...
+
+Thanks!
+Ah, it's not quite fixed.  The resulting page doesn't work in IE.  The relevant JS code is
+```js
+if (location.search.length > 0) {
+  var u = new URL(location);
+  var newsearch = "";
+  for(var key of u.searchParams.keys()) { // <<<=== this line
+    var val = u.searchParams.get(key);
+    // an empty "hq=" can be used to clear the cookie
+    if (key == "hq") {
+      SetCookie("PLT_ContextQuery", val);
+    } else if (key == "label") {
+      SetCookie("PLT_ContextQueryLabel", val);
+    } else {
+      if (newsearch == "") newsearch = "?";
+      newsearch = newsearch + "&" + key + "=" + encodeURIComponent(val);
+    }
+  }
+  // localtion.replace => jump without leaving the current page in the history
+  // (the new url uses "index.html" and the new search part)
+  location.replace(location.href.replace(/\/[^\/?#]*[?][^#]*/,
+                                         "/index.html" + newsearch));
+} else {
+  // no parameters found? just jump to the search page...
+  location.href = "index.html";
+}
+```
+
+I'm pretty sure IE doesn't support for-of loops.  You'd need to use the wordier for-in loop with a hasOwnProperty check...
+Does this mean attributes are going to be available that lower-layer too? (And I could easily believe this is a confused question; apologies in advance if so.)
+Attributes have always acted as syntax pattern variables. They should continue to behave the same. (Including support for promises, behavior on absent matches, etc.)
+
+One new feature is that if `x` is bound as an attribute, an occurrence of `x.y` is an error until `x.y` is also bound as a pattern variable. (Because it was probably intended as an attribute reference rather than a literal.)
+
+Did that answer your question?
+Yes, I think so. Thanks!
+If you are suggesting it is a misleading error message: I agree, it used to mislead me, and occasionally a student.
+If you expected it to work: the problem is that `s` is used it before its definition. This works:
+```
+(define-syntax-rule (s (f x ...) e) 0)
+(s (cons a d) (cons a d))
+```
+
+For reference in this discussion, the error for using a function before its definitions is:
+```
+s: undefined;
+ cannot reference an identifier before its definition
+```
+which was generated by:
+```
+(s '(cons a d) '(cons a d))
+(define (s x e) 0)
+```
+
+
+Merged, thanks.
+Can you check something? I suspect that B IS removed but that you get an
+error from `raco setup` ever after just because `A` is gone. (`raco pkg`
+runs `raco setup` after every transaction.)
+
+On Wed, Sep 20, 2017 at 5:20 PM, Leif Andersen <notifications@github.com>
+wrote:
+
+> If I have some package A, and another package B that depends on A.
+>
+> If I first delete the folder that contains the code for A, followed by
+> running:
+>
+> raco pkg remove B
+>
+> The package will fail to be removed, and instead I will get an error like
+> this:
+>
+> Removing B
+> raco setup: directory: #<path:/home/leifandersen/A> does not exist for collection: "A"
+>   context...:
+>    /usr/racket-6.10.0.1/collects/setup/setup-core.rkt:327:2: collection-cc!20
+>    /usr/racket-6.10.0.1/collects/setup/setup-core.rkt:476:8: for-loop
+>    /usr/racket-6.10.0.1/collects/setup/setup-core.rkt:469:4: for-loop
+>    /usr/racket-6.10.0.1/collects/setup/setup-core.rkt:71:0: setup-core
+>    /usr/racket-6.10.0.1/collects/setup/setup.rkt:65:3
+>    /usr/racket-6.10.0.1/collects/pkg/main.rkt:17:0: setup
+>    (submod /usr/racket-6.10.0.1/collects/pkg/main.rkt main): [running body]
+>    /usr/racket-6.10.0.1/collects/pkg/raco.rkt: [traversing imports]
+>    /usr/racket-6.10.0.1/collects/raco/raco.rkt: [running body]
+>    /usr/racket-6.10.0.1/collects/raco/main.rkt: [running body]
+>
+> —
+> You are receiving this because you are subscribed to this thread.
+> Reply to this email directly, view it on GitHub
+> <https://github.com/racket/racket/issues/1808>, or mute the thread
+> <https://github.com/notifications/unsubscribe-auth/AAOM-ulwndO3oWsRPLTByI6Cfzhhmdtiks5skYG7gaJpZM4Pefig>
+> .
+>
+
+
+
+-- 
+-=[     Jay McCarthy               http://jeapostrophe.github.io    ]=-
+-=[ Associate Professor        PLT @ CS @ UMass Lowell     ]=-
+-=[ Moses 1:33: And worlds without number have I created; ]=-
+
+Hm. 
+
+Nevermind?
+
+I've gone back through the entire setup process, and I suspect there was user error involved. I have no errors on load/save.
+
+I'm closing the ticket.
+I checked, and yes.
+
+- `raco pkg show B` says that `B` is removed
+- `raco setup` errors every time I run it
+
+Attached: the `A` and `B` folders I used.
+[A-and-B.tar.gz](https://github.com/racket/racket/files/1322408/A-and-B.tar.gz)
+
+Okay, but isn't the error that A has a problem in `raco setup`, not `B`? Just deleting A's directory out from underneath Racket is surely going to be a problem
+@jeapostrophe Should `raco setup` / `raco pkg` be more graceful when handling a missing / deleted linked package with no packages that depend on it?
+Should this have some tests?
+Probably, and added to `pkgs/racket-test-core/tests/racket/cstruct.rktl`
+Okay @samth tests added.
+LGTM
+(The failing tests are because unicode.org was down during the time travis was building. Once it goes back up the tests run as expected.)
+LGTM
+LGTM
+Thanks for the comments --- I'd forgotten about this and #1809 
+Has this idea died completely? Or have we found a better approach.
+My understanding is that we are waiting for the Racket rewrite of the macroexpander to become *the* macroexpander, which is currently waiting on the Chez rewrite, so this has been put on hold until that takes place. Is there something you would like it for?
+Nothing urgent. I just think it would be nice to add new (not entirely s-expressiony) syntax to Video, and I would (ideally) like to do it in a composable way.
+This PR now has a much simpler fix.
+
+I'm having trouble reproducing the error.
+I'll try again tomorrow, but I think we should merge this either way.
+I tried this on another laptop over the weekend with the same version of the OS, and it all worked fine. The only difference between them is that the one that works is T420 and the one that doesn't work is the T560.
+
+So, raco pkg works on one and not on another. I've copied the packages over to the non-working machine and can continue working, but I'm not sure how valid the bug report is at the moment. I'll leave it here and let you make a decision.
+https://github.com/racket/racket/commit/7d2e23dc280044a1cd216d12457b8f4acec3154b
+Everything looks checked out to me, okay to merge?
+https://github.com/racket/typed-racket/commit/9df037b0f6e6b2df3cc0993631bb2870367e291a for a conservative fix to the optimization
+In the require, [`only-meta-in`][only-meta-in] and `for-meta` are very different. `only-meta-in` doesn't shift phases at all, it only filters. Since `racket/port` provides `port->string` at phase 0, `only-meta-in 1` filtered it out. You probably meant `for-meta 1`, which does shift the phase up by 1.
+
+  [only-meta-in]: http://docs.racket-lang.org/reference/require.html#(form._((lib._racket%2Fprivate%2Fbase..rkt)._only-meta-in))
+  [for-meta]: http://docs.racket-lang.org/reference/require.html#%28form._%28%28lib._racket%2Fprivate%2Fbase..rkt%29._for-meta%29%29
+LGTM
+The [`raco exe`](https://docs.racket-lang.org/raco/exe.html) command does this, although the executable it creates is essentially an embedding of the module bytecode into the `racket` executable rather than a traditional compiled binary.
+It still need racket runtime? i see the document said .
+
+`
+A stand-alone executable is “stand-alone” in the sense that you can run it without starting racket, gracket, or DrRacket. However, the executable depends on Racket shared libraries, and possibly other run-time files declared via define-runtime-path. The executable can be packaged with support libraries to create a distribution using raco distribute, as described in raco distribute: Sharing Stand-Alone Executables.
+`
+I mean package all into one single file. 
+I guess this was already merged in https://github.com/racket/racket/commit/ed5911e5316fa457c4805774756a060ba4ef4b5c
+
+I think I've also seen this situation generate an error from the colorer and temporarily stop it, but don't have a particular situation and message from the DrRacket error dialog box recorded.
+When I try this in Racket v6.10.1.2, it gives the `module-path-index-resolve: "self" index has no resolution` error in DrRacket, but it compiles fine (printing `#t` for stasher and `#f` for printer) from the command line.
+You’re right. This program appears to be another bug in `module->namespace`? It works from the command line in any version of Racket newer than 6.5. Excitingly, Racket 6.5 segfaults(!) when compiling `printer.rkt`, but that’s pretty irrelevant.
+
+My guess is my attempt to create a minimal test case for this issue reduced the program too much. Perhaps your example from the mailing list would be a better minimal test case for the bug I was *actually* trying to reproduce.
+Can you test if these programs work on racket7?
+The program in this issue works in DrRacket in racket7 (as well as on the command-line), so I think it’s safe to say that the new expander fixes this issue as it’s currently written.
+
+Alex’s program from [this mailing list thread](https://groups.google.com/d/msg/racket-dev/4J0uVrE3hQ4/fdFmmTWRAgAJ) still fails on racket7 with the following error:
+
+```
+expand: namespace mismatch; cannot locate module instance
+  module: #<module-path-index='def[6592]>
+  use phase: 0
+  definition phase: 0
+  for identifier: #<syntax:def.rkt:59:14 x>
+  context...:
+   binding->module-instance
+   binding-lookup48.1
+   loop_150
+   /Users/alexis/gits/racket/racket7/racket/collects/syntax/parse/define.rkt:19:4: use-thing
+   apply-transformer-in-context
+   dispatch-transformer
+   do-local-expand60.1
+   /Users/alexis/gits/racket/racket7/racket/collects/syntax/wrap-modbeg.rkt:46:4: do-wrapping-module-begin
+   apply-transformer-in-context
+   dispatch-transformer
+   loop_180
+   finish_2
+   [repeats 1 more time]
+   pass-1-and-2-loop_0
+   module-begin-k_1
+   expand-module18.1
+   ...
+```
+
+(I’m not terribly surprised, since Matthew’s prior comments on this issue indicate that it’s an issue with the model of syntax properties right now, not really a bug in the expander.)
+I like this idea.
+Quick questions:
+
+1. Is the `#:return` and it's location in the `for/fold` form okay as is? (i.e. is there a better keyword and/or location?)
+
+2. Is the current approach to adding it reasonable? I was happy to learn I'm really just exposing hooks that are already part of the `for/fold` implementation -- does that look like the right way to add this feature?
+
+If, in its current form, people are more or less happy with it -- I'd be happy to add it to `for*/fold` as well and add some tests over the next few days (maybe get it in for 6.11?).
+The `#:return` keyword feels imperative, but I have no strong opinion.
+
+The implementation seems right to me.
+
+I don't think this should go in 6.11, though, since we're in the "don't add new stuff" week.
+
+I think something like this has been proposed in the past, and we didn't make the change then – but I don't remember why. Maybe it was that keywords weren't so established at the time, so we didn't have a lightweight syntax for adding a return option.
+How about `#:result`? 
+or `#:returns` so it reads more like a description and not a command?
+This seems like a nice improvement to me.
+
+Lets talk indentation. The example can't be right, right? How do you want DrRacket to indent this? (Please do not answer in a way that requires DrRacket to detect the present of a keyword, unless you plan to follow up with a new design of the indenter ;) )
+What about putting it inside the sequence of accumulators?
+Like so?
+
+```racket
+(for/fold ([acc '()]
+           [seen (hash)]
+           #:returns (reverse acc))
+          ([x (in-list sorted-nums)])
+  (cond
+    [(hash-ref seen x #f) (values acc seen)]
+    [else (values (cons x acc) (hash-set seen x #t))]))
+```
+I'm not completely sold on my own thought, but what if it is not indented differently than the body but is the first (or last) thing in the body?
+Oh, now that I see Sam's suggestion in action, I like it a lot, too.
+I was worried about putting it after the seq-exprs (e.g. in the body) because those bindings wouldn't be in scope for the return expression (right?).
+Ah, right. It would make no sense to people if it were in the body.
+
+
++ω for the idea. (I might have asked for a bad version of this before.) 
+
+I definitely think including the #:results-in expression in the accumulator section of the loop. And I’d almost go with another clause shape so that the indenter does not have to be changed: 
+
+ (for/fold ([acc1 e10][acc2 e20][#:results-in (zip acc1 acc2)]) ([x (loop-over-this)] . . ) body . .)
+
+
+
+
+I still prefer `#:result` and the placement I described. @mfelleisen I'm not sure what the extra `[]` helps -- DrRacket already indents my suggestion correctly.
+
+Also I noticed that the example produces an error in terms of `for/fold/derived` with current Racket :)
+since the idea is popular, I've implemented some of the suggested changes and moved the PR here: https://github.com/racket/racket/pull/1834 in order to delete this accidental branch on the racket repo.
+If you run your program at the repl, it produces the following error:
+
+    readline-input:3.16: bar: failure message
+      at: foo
+      in: (bar)
+
+That is, the context you supplied is used for the "in-term", but the syntax actually being destructured is used for the "at-term". That's the intended behavior: the at-term is supposed to identify the most specific term for which syntax-parse can articulate a problem. If there's no error message (because you used `#:when` or `(~fail)`), then syntax-parse decides it has nothing to say about the term that actually caused the error, and so it falls back to the context term. (If the failure were within a `~describe` pattern, it would fall back to that term and its description.)
+
+DrRacket, when it displays syntax errors, throws away the in-term and relabels the at-term with "in: ". I'm not sure why, but my guess is to simplify errors that students get from the teaching languages. If that's the case, maybe that behavior should be narrowed to just the teaching languages?
+
+Meanwhile, you can get the combination of the failure message and the context syntax like this:
+
+    (syntax-parse #'foo
+      #:context #'(bar)
+      [_
+       #:fail-when (current-syntax-context) "failure message"
+       #f])
+
+If the first argument to `#:fail-when` is a syntax object rather than a boolean, it is used as the at-term (unless there are multiple failures, in which case it gets more complicated).
+
+Apparently I really need to stop trusting DrRacket when I’m trying to reproduce issues… this is not the first time I have been bitten by it doing different things. :(
+
+Anyway, I think I see what you’re getting at, I just find it a little unintuitive. I’ll add the explicit reference to `(current-syntax-context)` for my failure pattern.
+@lexi-lambda DrRacket does do a whole bunch of stuff (in many different ways) and running by putting the code in a file and doing `racket x.rtk` is a good way to do a lot less stuff. That said, for most programs, you shouldn't be able to tell the difference, so I certainly appreciate you help ferret out the differences and fixing them!
+Don’t get me wrong, I love DrRacket—it’s pretty amazing, and I think it’s one of my favorite parts of the Racket ecosystem—I just feel bad about reporting a couple of bugs without actually testing to check if they happen outside of DrRacket (and then having them pointed out to me that they don’t). I need to get in the habit of actually *checking* outside of DrRacket before opening issues.
+Thanks. And yeah, that's a habit I had to learn too. :)
+I have a PR incoming that fixes this.
+
+On Thu, Oct 5, 2017 at 11:48 PM, Andrew Gwozdziewycz <
+notifications@github.com> wrote:
+
+> The documentation for syntax/readerr's raise-read-error and
+> raise-read-eof-error suggest that the numeric parameters have the
+> contract (or/c number? #f). However, in the source
+> <https://github.com/racket/racket/blob/master/racket/collects/syntax/readerr.rkt#L21>,
+> the contract is actually a bit more specific--it's (or/c
+> exact-positive-integer? #f) or (or/c exact-non-negative-integer? #f).
+>
+> It's easy to reproduce this:
+>
+> (raise-read-error "foo" "/bar/baz" 0 1 1 0)
+> ; raise-read-error: contract violation
+> ;   expected: (or/c exact-positive-integer? #f)
+> ;   given: 0
+> ;   argument position: 3rd
+> ; [,bt for context]
+>
+> —
+> You are receiving this because you are subscribed to this thread.
+> Reply to this email directly, view it on GitHub
+> <https://github.com/racket/racket/issues/1837>, or mute the thread
+> <https://github.com/notifications/unsubscribe-auth/AACuAwSInCdFbH76lQnvIFogf5U-3kjqks5spc04gaJpZM4PwEW->
+> .
+>
+
+
+
+-- 
+http://www.apgwoz.com
+
+For (2), the documentation for `curry` as it is right now is confusing because there are 2 forms that behave differently, and the pieces of the documentation don't say which form they're describing.
+
+The sentence "Returns a procedure that is a curried version of proc," only describes the first form, `(curry proc)`, and the documentation for the second form, `(curry proc v ...)` only starts when it says "A function call (curry proc v ...)". 
+
+The documentation should be made clearer so that each piece refers to the specific form it's supposed to describe.
+Are you trying to define the variable? Shouldn't you do (define (curry 0)) or something along those lines?
+I agree with @schackbrian2012 that `(curry 0)` should immediately give a contract error.
+Implemented, tested, and documented -- ready for review.
+This looks good to me.
+Note that there's an optimization that would apply to most loops using this to avoid ever creating multiple values, but neither Racket nor Chez seems to do it currently.
+I followed the link, and noticed the translation read
+
+> When using all capitals, SS is used. In addition, usage of the capital letter ẞ is also possible. Example: Straße – STRASSE – STRAẞE.
+
+Which appears to suggest an alternative to the existing behavior of ß -> SS, as opposed to making new ß -> ẞ the default behavior. I'm interested in knowing if this is what you gather from the official recommendation.
+Fair enough. I elided some details that are best left intact.
+
+You are right that ß → ẞ is now officially sanctioned by the Council for German Orthography as an **alternative** to ß → SS. But yes, ß → ẞ is not **preferred** over ß → SS, nor is ß → SS deprecated.
+
+But. In the context of `string-upcase` and `string-downcase` we should consider another aspect of the CGO’s report, which is that ẞ is now [part of the Standard German alphabet](http://typedrawers.com/discussion/comment/28862/#Comment_28862), as the uppercase form of ß:
+
+<img width="532" alt="screen shot 2017-10-09 at 10 38 55 am" src="https://user-images.githubusercontent.com/1425051/31351002-340068e4-acde-11e7-9260-06c775e761a6.png">
+
+The best reason not to change it is backward compatibility. 
+
+But the best reason to change it is that since we now have a choice, SS is better treated as a presentational variant of ẞ rather than the other way around. Because those who prefer the SS uppercase form will always be able to compose the orthographic and presentational transformations:
+
+```
+(define result (new-string-upcase "masse und maße")) ; suppose this is MASSE UND MAẞE
+(string-replace result "ẞ" "SS") ; MASSE UND MASSE
+```
+
+Whereas the reverse can never be true, because the ß→SS transformation is lossy:
+
+```
+(define result (string-upcase "masse und maße")) ; MASSE UND MASSE
+(string-replace result "SS" "ẞ") ; MAẞE UND MAẞE (wrong)
+```
+I just noticed another typo in the documentation for `raise-read-error`: instead of `@racket[source-name]` it should say `@racket[source]` (on line 27).
+
+Do you want to add that change to this PR?
+LGTM
+Done.
+
+On Tue, Oct 10, 2017 at 3:11 PM, Ben Greenman <notifications@github.com>
+wrote:
+
+> I just noticed another typo in the documentation for raise-read-error:
+> instead of @racket[source-name] it should say @racket[source] (on line
+> 27).
+>
+> Do you want to add that change to this PR?
+>
+> —
+> You are receiving this because you authored the thread.
+> Reply to this email directly, view it on GitHub
+> <https://github.com/racket/racket/pull/1838#issuecomment-335505653>, or mute
+> the thread
+> <https://github.com/notifications/unsubscribe-auth/AACuA5_0WNhEqcfL0mWGVzpGBmkrQAs5ks5sq4kbgaJpZM4PwEpA>
+> .
+>
+
+
+
+-- 
+http://www.apgwoz.com
+
+Naming the second argument something other than `_` seems to fix the issue, so there is a workaround.
+I haven't been able to trigger this. If you have a way to replicate the error in a large example, can you change `collapse-module-path-index` to log all of its arguments, and then maybe we'll see how to make an example?
+Here are the inputs for the case that fails:
+ ```
+cmpi: #<module-path-index:((quote (flonum-error typed-defs)))> #<procedure:...llapse-noctc.rkt:467:7>
+```
+
+That comes from a call to `collapse-module-path-index` with just the first argument, which calls `collapse-module-path-index/relative` with that argument, which calls `collapse-module-path-index` again with those two arguments.
+Sorry for being late here, but the docs should have `tag-expr`, not `tag-id`. That is, the optional `#:tag` form has an expression that should produce a tag value, not necessarily an identifier.
+Woops, my apologies. I would be happy to change that. While I'm at it, anything else that you would like changed?
+Nothing else - thanks for the improvement!
+It looks like there's a bad mode path index there, which I think could only be created internally. That looks specifically like a bad conversion from a resolved module path.
+
+Does using the `modpath` branch of https://github.com/mflatt/racket change the behavior? That adjusts one place that a module path index is created from a resolved module path, although in a place that I thought would only happen with primitive modules.
+That does seem to fix the problem. 
+Oh, to replicate the problem yourself, you can probably put a call to `collapse-module-path-index` in the call to `add-mod!` in `typed-racket/env/env-req.rkt` and then recompile `plot`.
+I'll try that sometime (so leaving the issue open), but I've pushed the repair as dd585e7ff7db0647531e809477ef121ee3328b84.
+Possibly related: on Windows, entering the following text into a blank buffer will cause DrRacket to open a console window to complain about an error in `color:text<%>`:
+
+```
+; EXERCISE 3
+
+; compare : (X) [X -> Boolean] [Non-Empty-List-of X] -> X
+;; A [List-of X] is
+; - '()
+; - (cons X [List-of X])
+#; (define (list-of-x-temp lox)
+```
+
+You can make DrRacket go slightly crazy by removing and reinserting the newline before the `#`.  And, if you add a bunch more valid code to the buffer, and then remove the hash mark, the syntax highlighting doesn't get immediately fixed.
+
+Trying the same thing on Linux just highlights the `#;` line in red, and nothing seems to crash on me.
+@AlexKnauth I reread the documentation with the clarification that you gave in your comment on this issue, and it makes more sense now. I think that clarifying the documentation would solve the second example. I think that the first and third examples require more than just a clarification though.
+
+@chriscebrero No, I am not trying to define a variable in the first example. I am trying to call the built-in curry function with an argument that violates its contract.
+
+@iitalics Thank you, I think that your commit #0d37545 will fix the first example.
+
+The issue in the third example remains though. I would expect `(curry string? 0)` and `(curry (conjoin string? string?) 0)` to yield the same result, but they do not.
+
+```
+> (string? 0)
+#f
+> ((conjoin string? string?) 0)
+#f
+> (curry string? 0)
+#f
+> (curry (conjoin string? string?) 0)
+#<procedure:curried>
+```
+![image](https://user-images.githubusercontent.com/918464/31677242-23003a50-b338-11e7-91a4-cc323f7a19a9.png)
+
+@mflatt when you have a sec, a sanity check on the implementation (and any other feedback of course) would be great!
+The only issue I see is that a `history` note should be added to the docs. Otherwise, this looks good to me.
+Another option is to detect a commonly used comparator in the call site and
+at that point construct the specialized version and deposit it into the
+client module.
+
+Also: check the shootout benchmarks.
+
+And how much faster is the specialized version these days?
+
+One note: after chatting w/ @samth I realized running `raco setup` may not necessarily reflect all common use cases of `sort` "in the wild" since it is just building all the modules, etc. So I'll have to do more sampling and some benchmarking, as @rfindler suggests to further clarify what might make sense.
+PS: I think it is great you're looking into this. This code isn't very recent and the compiler tradeoffs have changed since then (and are about to change again in a big way, of course!). I expect you'll find a point that makes a lot more sense nowadays.
+
+Would it make any sense to run all the benchmarks and tests we have with counting turned on? 
+
+Would it make even more sense to equip drdr with ‘requests’ that collect bespoke statistics for the next N runs? 
+Shootout with Racket HEAD:
+https://gist.github.com/pnwamk/4a4e34a9bf7f5f831def95f7984d300b
+
+Shootout with this PR:
+https://gist.github.com/pnwamk/e0acfafd6bdadf6198562d8c28c4b960
+
+Only those shootout results that explicitly use `sort` in the source code:
+
+```
+moments (no obvious cache hits from source code)
+
+with precompiled sorts
+----------------------
+[racket moments (2288 2285 320) 12]
+[racket moments (2292 2288 320) 12]
+[racket moments (2308 2304 328) 12]
+
+without precompiled sorts
+-------------------------
+[racket moments (2316 2312 332) 15]
+[racket moments (2284 2284 316) 15]
+[racket moments (2292 2292 324) 15]
+
+
+
+
+
+
+k-nucleotide (no obvious cache hits from source code)
+
+with precompiled sorts
+----------------------
+[racket k-nucleotide (2936 2936 56) 18]
+[racket k-nucleotide (2940 2937 52) 18]
+[racket k-nucleotide (2916 2910 52) 18]
+
+
+without precompiled sorts
+-------------------------
+[racket k-nucleotide (2924 2921 52) 16]
+[racket k-nucleotide (2940 2938 52) 16]
+[racket k-nucleotide (2916 2913 48) 16]
+
+
+
+
+
+
+meteor (should hit a cached version of sort for `>`)
+
+with precompiled sorts
+----------------------
+[racket meteor (296 298 0) 47]
+[racket meteor (300 298 0) 47]
+[racket meteor (300 300 0) 47]
+
+
+without precompiled sorts
+-------------------------
+[racket meteor (300 299 0) 49]
+[racket meteor (304 304 0) 49]
+[racket meteor (296 299 0) 49]
+
+
+
+wordfreq (should hit a cached sort for `string>?`)
+
+with precompiled sorts
+----------------------
+[racket wordfreq (2748 2749 20) 69]
+[racket wordfreq (2812 2809 16) 69]
+[racket wordfreq (2744 2741 16) 69]
+
+
+without precompiled sorts
+-------------------------
+[racket wordfreq (2824 2825 20) 68]
+[racket wordfreq (2856 2856 24) 68]
+[racket wordfreq (2808 2806 20) 68]
+```
+a quickly thrown together microbenchmark of just sorting with a comparison operator that has a precompiled version in the current `sort` implementation:
+
+```racket
+#lang racket/base
+
+
+(define short-lists '(()
+                      (1)
+                      (1 2)
+                      (2 1)
+                      (1 2 3)
+                      (3 2 1)
+                      (1 2 3 4)
+                      (5 4 3 2 1)
+                      (1 2 3 4 5 6 7 8 9 10)
+                      (10 9 8 7 6 5 4 3 2 1)))
+
+(define list100 (build-list 100 (λ _ (random 100))))
+(define list1000 (build-list 1000 (λ _ (random 1000))))
+(define list10000 (build-list 10000 (λ _ (random 10000))))
+
+
+(printf "sorting short lists:\n")
+(time (for* ([_ (in-range 100000)]
+             [l (in-list short-lists)])
+        (sort l <)))
+
+(printf "sorting list of length 100:\n")
+(time (for* ([_ (in-range 10000)])
+        (sort list100 <)))
+
+(printf "sorting list of length 1000:\n")
+(time (for* ([_ (in-range 10000)])
+        (sort list1000 <)))
+
+(printf "sorting list of length 10000:\n")
+(time (for* ([_ (in-range 10000)])
+        (sort list10000 <)))
+```
+
+results with precompiled sorts:
+
+```
+> racket sorting.rkt      
+sorting short lists:
+cpu time: 140 real time: 140 gc time: 4
+sorting list of length 100:
+cpu time: 56 real time: 55 gc time: 0
+sorting list of length 1000:
+cpu time: 1100 real time: 1100 gc time: 4
+sorting list of length 10000:
+cpu time: 15148 real time: 15145 gc time: 52
+```
+
+
+results without precompiled sorts:
+
+```
+> racket sorting.rkt      
+sorting short lists:
+cpu time: 164 real time: 165 gc time: 0
+sorting list of length 100:
+cpu time: 128 real time: 126 gc time: 0
+sorting list of length 1000:
+cpu time: 1812 real time: 1811 gc time: 20
+sorting list of length 10000:
+cpu time: 23948 real time: 23940 gc time: 52
+```
+Obviously in the microbenchmarks, replacing `<` with `(λ (x y) (< x y))` causes both to run in the same time (since the comparison function has no precompiled version).
+
+Also, obviously the microbenchmarks ignore the cache hit rate (and I still don't have numbers on what that looks like outside of just running `raco make`, but I worry it is common to use a custom comparison function or a #:key argument -- but I could be wrong).
+I offer no conclusion, but FWIW: These precompiled sorts were a hassle for the linklet flattener, so I considered removing them at the time. I decided to keep them after seeing the difference in microbenchmarks, but only because that seemed safer. If no real code hits the cache, that's a good argument for getting rid of it.
+A note should be added to the match grammar that `list*` is an alias for `list-rest`
+I threw together a quick and dirty script that checks for usages of `(sort ...)` and tries to determine if they would be a cache hit or miss based on whether or not keyword args were present, and what the literal symbol for the sort function was:
+
+https://gist.github.com/pnwamk/5f507da57a3276da81f58eb3a24e170f
+
+Here are the results from running that on all the .rkt files (18,058) from pkgs.racket-lang.org:
+
+```
+total usages of sort found: 915
+confirmed cache misses (i.e. used #:key): 342
+probable cache misses (i.e. symbol didn't match precompile list): 317
+cache hits (symbol matched a precompiled function): 234
+unknown (i.e. didn't match syntax for normal sort usage): 22
+hit counts for precompiled versions:
+((char<? . 3)
+ (< . 96)
+ (string<? . 72)
+ (<= . 2)
+ (string>? . 6)
+ (>= . 2)
+ (keyword<? . 14)
+ (string-ci<=? . 3)
+ (string<=? . 22)
+ (> . 13)
+ (string-ci<? . 1))
+```
+
+Again, this doesn't really indicate how _often_ the cache is being hit or missed during execution, and it doesn't exclude usages that are uninteresting (i.e. test cases that sort the results for comparison, etc).
++1.  I got bitten by this because I had only `HTTPS_PROXY` and not `https_proxy` set.
+I just pushed a fix to this.
+@jeapostrophe what do you think about `ALL_PROXY`? Also, if you use #1859 in your commit messages it links automatically.
+I implemented ALL_PROXY. I think it is best to do whatever is common on these tools to make it so users don't even need to know what Racket is doing if they are in a proxied environment. (It wrote PR1859, which is what has worked for a long time with gnats)
+Since the move to Github, nothing closes Gnats bugs, of course, and PR means something else here. And now I see the `all_proxy` code.
+Thanks for the quick fix!
+The guide for `quote` also has this problem here:
+https://github.com/racket/racket/blob/62f5b2c4e4cdefa18fa36275074ff9fe376ddaf3/pkgs/racket-doc/scribblings/guide/quote.scrbl#L58
+(You can see it in a margin note near the bottom)
+@AlexKnauth Thanks. I also made that additional change.
+Looks good to me, someone else approve this small change?
+Looks good, thank you!
+Great!
+@rfindler @mflatt some updates here: some students are running Racket 6.10 on Win10FCU, and are able to load DrRacket, edit files and save them...but not open saved files.  This doesn't trigger a BSOD crash, though: DrRacket just becomes completely unresponsive until the OS asks you to kill it.
+
+Might you be able to pull another rabbit out of a hat, and find a workaround for that codepath, too?
+@blerner I think I'd need a bit more help to understand what's going on and I am wondering if you could assist with a little debugging? In particular, if you start DrRacket from a command.com window using this incantation:
+
+```
+racket.exe -l drracket
+```
+
+and then you do the bad thing and then return to the command.com window and hit control-c, we might get a helpful stacktrace.
+I'll ask the affected students to stop by later, and try to get that info for you.
+Ah. In that case, while you have them, try this as a possible workaround (it will work if the problem is in the open file dialog code (which is where OS interactions have come up quite a bit in the past), but won't if the bug is in DrRacket's "lets open up this file and get things started" code):
+
+```
+racket.exe -l- file.rkt
+```
+
+Or even:
+
+```
+drracket.exe file1.rkt file2.rkt file3.rkt
+```
+
+Worst comes to worst, they coudl install a ubuntu VM (or dual boot) their laptops, I suppose. :(
+I am having the same issue. Thank you, TheBeavster, I was able to work on my project by moving the folder to a local drive.
+Maybe this is relevant?  https://github.com/racket/racket/issues/1856
+@blerner I was having the same issue. As @rfindler just said, see #1856 . Get them to move the files to a local folder for now.
+Correction -- the student was indeed using OneDrive.  Sigh.  More details below.
+Reproduction steps: 
+1) Launching DrRacket directly, it loads through the splash screen into the main window successfully.  Going to the open dialog and loading a file hangs DrRacket completely.  Force-quit.
+2) Using the command window to launch `"C:\Program Files\Racket\racket.exe" -l drracket` loads successfully to the main window, then opening a file hangs, and pressing ctrl+C in the command window does nothing at all.  Looking at the stack trace in Process Explorer seems ot show that the main thread of DrRacket is hung at address racket.exe+0x1500, but I don't have symbol information for you.
+3) Trying `"C:\Program Files\Racket\racket.exe" -l- "C:\Users\studentname\OneDrive\Documents\NEU\Classes\CS 2500-2501\Problem Sets\problemset2a.rkt"` dies with error: `require: bad module path '(lib "that whole long string") derived from command line argument: that whole long string`
+4) Finally, trying `"C:\Program Files\Racket\DrRacket.exe" "that whole long path"` hangs on the splash screen right after showing the clock icon.
+5) Copying the file out of the OneDrive directory into a local directory and retrying `"C:\Program Files\Racket\Racket.exe" -l- problemset2a.rkt` dies with 
+```
+default-load-handler: cannot open module file
+  module path: (lib "problemset2a.rkt")
+  path: c:\Program Files\Racket\share\pkgs\pconvert-lib\mzlib\problemset2a.rkt
+  system error: The system cannot find the file specified.; errid=2
+```
+6) Trying `"C:\Program Files\Racket\DrRacket.exe" problemset2a.rkt` from a local directory worked just fine.
+Thank you!
+
+In the “racket -l-“ examples below there needs to be a “drracket”, eg
+“racket.exe -l- drracket <filename.rkt>”, sorry about that.
+
+(But I don’t think running those will give any new information. )
+
+Robby
+
+On Mon, Oct 23, 2017 at 4:10 PM Ben Lerner <notifications@github.com> wrote:
+
+> Reproduction steps:
+>
+>    1. Launching DrRacket directly, it loads through the splash screen
+>    into the main window successfully. Going to the open dialog and loading a
+>    file hangs DrRacket completely. Force-quit.
+>    2. Using the command window to launch "C:\Program
+>    Files\Racket\racket.exe" -l drracket loads successfully to the main
+>    window, then opening a file hangs, and pressing ctrl+C in the command
+>    window does nothing at all. Looking at the stack trace in Process Explorer
+>    seems ot show that the main thread of DrRacket is hung at address
+>    racket.exe+0x1500, but I don't have symbol information for you.
+>    3. Trying "C:\Program Files\Racket\racket.exe" -l-
+>    "C:\Users\studentname\OneDrive\Documents\NEU\Classes\CS 2500-2501\Problem
+>    Sets\problemset2a.rkt" dies with error: require: bad module path '(lib
+>    "that whole long string") derived from command line argument: that whole
+>    long string
+>    4. Finally, trying "C:\Program Files\Racket\DrRacket.exe" "that whole
+>    long path" hangs on the splash screen right after showing the clock
+>    icon.
+>    5. Copying the file out of the OneDrive directory into a local
+>    directory and retrying "C:\Program Files\Racket\Racket.exe" -l-
+>    problemset2a.rkt dies with
+>
+> default-load-handler: cannot open module file
+>   module path: (lib "problemset2a.rkt")
+>   path: c:\Program Files\Racket\share\pkgs\pconvert-lib\mzlib\problemset2a.rkt
+>   system error: The system cannot find the file specified.; errid=2
+>
+>
+>    1. Trying "C:\Program Files\Racket\DrRacket.exe" problemset2a.rkt from
+>    a local directory worked just fine.
+>
+> —
+> You are receiving this because you were mentioned.
+> Reply to this email directly, view it on GitHub
+> <https://github.com/racket/racket/issues/1671#issuecomment-338797757>, or mute
+> the thread
+> <https://github.com/notifications/unsubscribe-auth/AAYWsHO-JgEgWLBXX7UwUqkScw8k-v7Wks5svQDIgaJpZM4NCA4Z>
+> .
+>
+
+It appears to me that the problem here is that the strategy used to display check-expect results can require a lot of time for values like `(range 0 9999 1)`. Probably the best strategy for fixing this bug is to actually fix bugs in the `#lang` variation of the teaching languages and migrate to those as they do not use the problematic value displaying strategy.
+
+An interim solution could be to institute a timeout in the rendering process and then give up if the values don't finish rendering in time.
+
+
+While the existing display strategy isn’t ideal, I think it is superior to the #lang isl option. 
+The problem also comes up in different ways so for now I’d think the time-out option 
+is superior. Eventually I’d like to have both: a different display strategy and a time-out
+option. 
+This might be related? https://github.com/nodejs/node/issues/12737
+different language, obviously, but a filesystem issue having to do with
+onedrive's reparse points sounds fishy and similar...
+
+On Oct 23, 2017 5:42 PM, "Robby Findler" <notifications@github.com> wrote:
+
+> Thank you!
+>
+> In the “racket -l-“ examples below there needs to be a “drracket”, eg
+> “racket.exe -l- drracket <filename.rkt>”, sorry about that.
+>
+> (But I don’t think running those will give any new information. )
+>
+> Robby
+>
+> On Mon, Oct 23, 2017 at 4:10 PM Ben Lerner <notifications@github.com>
+> wrote:
+>
+> > Reproduction steps:
+> >
+> > 1. Launching DrRacket directly, it loads through the splash screen
+> > into the main window successfully. Going to the open dialog and loading a
+> > file hangs DrRacket completely. Force-quit.
+> > 2. Using the command window to launch "C:\Program
+> > Files\Racket\racket.exe" -l drracket loads successfully to the main
+> > window, then opening a file hangs, and pressing ctrl+C in the command
+> > window does nothing at all. Looking at the stack trace in Process
+> Explorer
+> > seems ot show that the main thread of DrRacket is hung at address
+> > racket.exe+0x1500, but I don't have symbol information for you.
+> > 3. Trying "C:\Program Files\Racket\racket.exe" -l-
+> > "C:\Users\studentname\OneDrive\Documents\NEU\Classes\CS
+> 2500-2501\Problem
+> > Sets\problemset2a.rkt" dies with error: require: bad module path '(lib
+> > "that whole long string") derived from command line argument: that whole
+> > long string
+> > 4. Finally, trying "C:\Program Files\Racket\DrRacket.exe" "that whole
+> > long path" hangs on the splash screen right after showing the clock
+> > icon.
+> > 5. Copying the file out of the OneDrive directory into a local
+> > directory and retrying "C:\Program Files\Racket\Racket.exe" -l-
+> > problemset2a.rkt dies with
+> >
+> > default-load-handler: cannot open module file
+> > module path: (lib "problemset2a.rkt")
+> > path: c:\Program Files\Racket\share\pkgs\pconvert-lib\mzlib\
+> problemset2a.rkt
+> > system error: The system cannot find the file specified.; errid=2
+> >
+> >
+> > 1. Trying "C:\Program Files\Racket\DrRacket.exe" problemset2a.rkt from
+> > a local directory worked just fine.
+> >
+> > —
+> > You are receiving this because you were mentioned.
+> > Reply to this email directly, view it on GitHub
+> > <https://github.com/racket/racket/issues/1671#issuecomment-338797757>,
+> or mute
+> > the thread
+> > <https://github.com/notifications/unsubscribe-auth/AAYWsHO-
+> JgEgWLBXX7UwUqkScw8k-v7Wks5svQDIgaJpZM4NCA4Z>
+> > .
+> >
+>
+> —
+> You are receiving this because you were mentioned.
+> Reply to this email directly, view it on GitHub
+> <https://github.com/racket/racket/issues/1671#issuecomment-338805359>, or mute
+> the thread
+> <https://github.com/notifications/unsubscribe-auth/AA4DwHWlTDgLBJKHcQ1e5O8oZK7pH3PBks5svQg6gaJpZM4NCA4Z>
+> .
+>
+
+And quite possibly
+https://blogs.windows.com/windowsexperience/2017/06/13/onedrive-files-demand-now-available-windows-insiders/,
+since https://github.com/Microsoft/vscode/issues/27285 indicates even
+Microsoft apps can get this wrong...
+
+On Oct 23, 2017 5:42 PM, "Robby Findler" <notifications@github.com> wrote:
+
+Thank you!
+
+In the “racket -l-“ examples below there needs to be a “drracket”, eg
+“racket.exe -l- drracket <filename.rkt>”, sorry about that.
+
+(But I don’t think running those will give any new information. )
+
+Robby
+
+On Mon, Oct 23, 2017 at 4:10 PM Ben Lerner <notifications@github.com> wrote:
+
+> Reproduction steps:
+>
+> 1. Launching DrRacket directly, it loads through the splash screen
+> into the main window successfully. Going to the open dialog and loading a
+> file hangs DrRacket completely. Force-quit.
+> 2. Using the command window to launch "C:\Program
+> Files\Racket\racket.exe" -l drracket loads successfully to the main
+> window, then opening a file hangs, and pressing ctrl+C in the command
+> window does nothing at all. Looking at the stack trace in Process Explorer
+> seems ot show that the main thread of DrRacket is hung at address
+> racket.exe+0x1500, but I don't have symbol information for you.
+> 3. Trying "C:\Program Files\Racket\racket.exe" -l-
+> "C:\Users\studentname\OneDrive\Documents\NEU\Classes\CS 2500-2501\Problem
+> Sets\problemset2a.rkt" dies with error: require: bad module path '(lib
+> "that whole long string") derived from command line argument: that whole
+> long string
+> 4. Finally, trying "C:\Program Files\Racket\DrRacket.exe" "that whole
+> long path" hangs on the splash screen right after showing the clock
+> icon.
+> 5. Copying the file out of the OneDrive directory into a local
+> directory and retrying "C:\Program Files\Racket\Racket.exe" -l-
+> problemset2a.rkt dies with
+>
+> default-load-handler: cannot open module file
+> module path: (lib "problemset2a.rkt")
+> path: c:\Program Files\Racket\share\pkgs\pconvert-lib\mzlib\
+problemset2a.rkt
+> system error: The system cannot find the file specified.; errid=2
+>
+>
+> 1. Trying "C:\Program Files\Racket\DrRacket.exe" problemset2a.rkt from
+> a local directory worked just fine.
+
+>
+> —
+> You are receiving this because you were mentioned.
+> Reply to this email directly, view it on GitHub
+> <https://github.com/racket/racket/issues/1671#issuecomment-338797757>, or
+mute
+> the thread
+> <https://github.com/notifications/unsubscribe-auth/AAYWsHO-
+JgEgWLBXX7UwUqkScw8k-v7Wks5svQDIgaJpZM4NCA4Z>
+
+> .
+>
+
+—
+You are receiving this because you were mentioned.
+Reply to this email directly, view it on GitHub
+<https://github.com/racket/racket/issues/1671#issuecomment-338805359>, or mute
+the thread
+<https://github.com/notifications/unsubscribe-auth/AA4DwHWlTDgLBJKHcQ1e5O8oZK7pH3PBks5svQg6gaJpZM4NCA4Z>
+.
+
+I've now installed Fall Creators Update, and I can replicate the problem with OneDrive paths. Hopefully, fixing that will help with other things.
+
+The problem is that the OneDrive folder in Win10FCU is a reparse point that claims to point back to itself – analogous to a symbolic-link cycle. Racket doesn't handle that cycle gracefully.
+
+I'll work on a repair.
+Yes, a PR for this would be great.
+Ping! Does someone have an idea why this might happen? I had similar issues a few times with jit activated and large/deeply nested expressions.
+
+Cool! I will look into that!
+This looks good to me, although review from @mflatt would be good too.
+
+Another nice thing to add would be an `unsafe-struct-cas!` operation.
+@samth Thank you for your review! A `unsafe-struct*-cas!` operation would look very much like the `unsafe-vector*-cas!` operation. Would it make sense to also add some safe cas operations for structs? But I suggest to address struct cas in a separate issue/PR.
+To narrow it down further, it fails with `more than 2043` elements in `Scheme_Vector`
+
+From initial cursory look at the code, my guess is something to do with inline allocation failure. Maybe @mflatt could look into it.
+I'm working on a repair right now. Thanks @jpathy for investigating, and thanks @minad for the report and ping (because I had missed the report).
+Thanks for fixing the issue!
+I've reverted the commit for now.
+Merged - thanks!
+Not sure if this is the right place to note this, but the openbsd  builds last night failed with an error message that suggests that this change may be relevant:
+
+https://plt.eecs.northwestern.edu/snapshots/20171026-dfa5d48092/
+
+(follow the "build failed" link for more information)
+@rfindler yes there is a minor copy paste error in unsafe_struct_star_cas (ping @mflatt).
+@mflatt, btw thanks for adding the jit implementation!
+Fixed in 5f1b70788113a05309c50710ee8ad13f1a3b2154. There was an extra bug in the JIT part.
+@rfindler @mfelleisen I like either of those solutions.
+@pnwamk I think you should email the racket-dev list about this pull request. (Maybe someone there has strong options / requirements, but hasn't seen this yet.)
+yes indeed
+Please post only bug reports and requests for small-scale improvements here.
+The workaround for me is to move my files to another folder. I'm still unsure why DrRacket won't open the files in my OneDrive.
+
+
+A problem with OneDrive files on Windows 10 Fall Creators Update has been fixed for the upcoming Racket release. If you'd like to try a pre-release version, see https://pre-release.racket-lang.org.
+Fixed in 512910c83f9dd928e2465682a35991f1b2f6aecf.
+I'm supposed to configure something to get rid of that, and I forgot...
+Fixed?
+Yes, it seems fixed now, thanks.
+With the above patch compilation succeeds - and racket runs normally.
+
+Though if I then try to run drracket, I get a process that keeps running, but does nothing. If I then disable mprotect for ${PREFIX}/lib/racket/gracket, there is a segfault, with the following backtrace:
+#0  0x00007cce50d075ea in _lwp_kill () from /usr/lib/libc.so.12
+#1  0x00007cce50d06dc5 in abort () from /usr/lib/libc.so.12
+#2  0x000000000067cc42 in fault_handler ()
+#3  <signal handler called>
+#4  0x00007cce50cf9000 in strlen () from /usr/lib/libc.so.12
+#5  0x00007cce50cf4f8e in strdup () from /usr/lib/libc.so.12
+#6  0x0000000000441483 in scheme_glib_log_message ()
+#7  0x00007cce4a64eb84 in g_logv () from /usr/pkg/lib/libglib-2.0.so.0
+#8  0x00007cce4a64ed8a in g_log () from /usr/pkg/lib/libglib-2.0.so.0
+#9  0x00007cce41a189fd in atspi_get_a11y_bus () from /usr/pkg/lib/libatspi.so.0
+#10 0x00007cce4220ffd1 in atk_bridge_adaptor_init () from /usr/pkg/lib/libatk-bridge-2.0.so.0
+#11 0x00007cce4268adc4 in _gtk_accessibility_init () from /usr/pkg/lib/libgtk-3.so.0
+#12 0x00007cce42821f49 in default_display_notify_cb () from /usr/pkg/lib/libgtk-3.so.0
+#13 0x00007cce4960efc5 in g_closure_invoke () from /usr/pkg/lib/libgobject-2.0.so.0
+#14 0x00007cce49620fe6 in signal_emit_unlocked_R () from /usr/pkg/lib/libgobject-2.0.so.0
+#15 0x00007cce49629c18 in g_signal_emit_valist () from /usr/pkg/lib/libgobject-2.0.so.0
+#16 0x00007cce49629ffa in g_signal_emit () from /usr/pkg/lib/libgobject-2.0.so.0
+#17 0x00007cce49613424 in g_object_dispatch_properties_changed () from /usr/pkg/lib/libgobject-2.0.so.0
+#18 0x00007cce49615783 in g_object_notify () from /usr/pkg/lib/libgobject-2.0.so.0
+#19 0x00007cce4542b9d8 in _gdk_display_manager_add_display () from /usr/pkg/lib/libgdk-3.so.0
+#20 0x00007cce4960efc5 in g_closure_invoke () from /usr/pkg/lib/libgobject-2.0.so.0
+#21 0x00007cce496215b3 in signal_emit_unlocked_R () from /usr/pkg/lib/libgobject-2.0.so.0
+#22 0x00007cce49629c18 in g_signal_emit_valist () from /usr/pkg/lib/libgobject-2.0.so.0
+#23 0x00007cce4962a4ca in g_signal_emit_by_name () from /usr/pkg/lib/libgobject-2.0.so.0
+#24 0x00007cce4545660e in _gdk_x11_display_open () from /usr/pkg/lib/libgdk-3.so.0
+#25 0x00007cce4542b89b in gdk_display_manager_open_display () from /usr/pkg/lib/libgdk-3.so.0
+#26 0x00007cce42823132 in gtk_init_check () from /usr/pkg/lib/libgtk-3.so.0
+#27 0x00007cce51402a20 in ffi_call_unix64 () from /usr/pkg/lib/libffi.so.6
+#28 0x00007cce5140248b in ffi_call () from /usr/pkg/lib/libffi.so.6
+#29 0x0000000000678f90 in ffi_do_call.isra ()
+#30 0x0000000000679270 in ffi_do_call_after_stack_check ()
+#31 0x00007cce5160b1d6 in ?? ()
+#32 0x00007f7fff545a30 in ?? ()
+#33 0x00007cce4ce405e2 in ?? ()
+#34 0x00007cce4d722350 in ?? ()
+#35 0x00007cce51afdf00 in ?? ()
+#36 0x0000000000000005 in ?? ()
+#37 0x0000000000000002 in ?? ()
+#38 0x0000000000000000 in ?? ()
+
+
+Arguably, this is correct. 
+
+I'm not sure what argument you have in mind, but the fact that this one does the more obvious thing seems like a counterargument:
+
+```
+(syntax-parser
+  [e #'e]
+  [f #'f])
+```
+
+Also, I'll note that if I rename "f" to "e" (in my example) and then back I get different program, which also seems like a counterargument.
+I think I can see that if there is a common prefix, it's better that the implementation do not re-match the prefix and use the same bound variable. But I would be against exposing this to the user because:
+
+- Intuitively, the scope of first pattern variable `e` should span only in the first clause.
+- Renaming does not work anymore. For example, I cannot rename `thn` and `els` correctly:
+
+```
+#lang racket/base
+
+(require (for-syntax racket/base)
+         syntax/parse)
+
+(define-syntax (reversed-if _)
+  (error 'reversed-if "bad syntax"))
+
+(syntax-parser #:literals (quote reversed-if)
+ [(reversed-if thn:expr els:expr '#t)
+  #'thn]
+ [(reversed-if thn:expr els:expr '#f)
+  #'els]
+ [(reversed-if thn:expr els:expr con:expr)
+  #'(if con thn els)])
+```
+
+Would it be better to use generics here?
+That’s a good question, that you’d be better equipped to answer. From a user’s perspective they’ll still need to provide a function—likely the same exact function as the `prop` version. 
+
+I don’t see an actual advantage with generics in deserialization, and suspect we’d probably need to introduce another generic if someone figured out a decent approach to it down the line, to avoid suddenly not being fully compliant with the json generic.
+
+I have to read up more, but if we could use generics to extend builtin, primitive types (I think that’s what `#:defaults` would allow?), then that might be an advantage as we could refactor the whole of `json` to break up the large `cond` in `write-json*` and `jsexpr?`, which would actually make it completely worth while, in my opinion.
+
+I guess we could call it `gen:jsexpr`, too, and get the predicate for free!
+
+Note: the current version was cribbed off of `prop:serializable-struct` (or whatever the name is?). 
+
+
+
+> On Nov 4, 2017, at 07:03, Sam Tobin-Hochstadt <notifications@github.com> wrote:
+> 
+> Would it be better to use generics here?
+> 
+> —
+> You are receiving this because you authored the thread.
+> Reply to this email directly, view it on GitHub, or mute the thread.
+> 
+
+In the case of serialization, I think struct properties make more sense than a generic, because you are attaching a piece of information (a serialize function AND the module/function name for where to find it) to a struct definition, rather than defining a generic method. (I know you _could_ in principle do it in either, it just feels cleaner as a property.)
+
+I mean, it would be nice to do it as a generic with two functions (serialize and deserialize), but the deserialize function needs to be bound to a variable at the top level.
+I think the `json` library is doing the right thing,  forcing keys to be symbols.
+
+Almost all symbols are immutable, and so they work "as expected" with `eq?`. But with strings its easy to mix up mutable and immutable strings.
+
+This can be confusing in plain Racket code:
+
+```
+> (hash-ref (hasheq "A" 1) (list->string '(#\A)) #f)
+#f
+```
+
+And yeah, like you say there'd be a round-trip issue for hashtables with 2 or more keys that look the same:
+
+```
+> (string->jsexpr (jsexpr->string (hasheq (make-string 1 #\A) 1 (make-string 1 #\A) 2)))
+;; ???
+```
+
+(Symbols can have all the same problems if you mix interned & uninterned symbols, but it's harder to accidentally get an uninterned symbol)
+@LeifAndersen IIUC, you are in favor of the property, then?
+
+I’m beginning to think the property makes sense here, too, for reasons of setting the stage for appropriate deserialization, later. It’d be much more natural to, say, provide a mapping from JSON keys to the appropriate `set!` functions (or something) than to try to figure out a way to do it with generics.
+
+Though, perhaps that deserialization mapping could be provided as a property, and used by the generic deserialize function...
+
+
+> On Nov 4, 2017, at 13:42, Leif Andersen <notifications@github.com> wrote:
+> 
+> In the case of serialization, I think struct properties make more sense than a generic, because you are attaching a piece of information (a serialize function AND the module/function name for where to find it) to a struct definition, rather than defining a generic method. (I know you could in principle do it in either, it just feels cleaner as a property.)
+> 
+> I mean, it would be nice to do it as a generic with two functions (serialize and deserialize), but the deserialize function needs to be bound to a variable at the top level.
+> 
+> —
+> You are receiving this because you authored the thread.
+> Reply to this email directly, view it on GitHub, or mute the thread.
+> 
+
+Merged!
+27ec348a62a8dbae617ea99d0d465494ad310b08
+`hasheq` doesn't mix well with strings. I think its a bad idea to encourage it at all. Better for hash using `equal?`, but apparently `jexpr?` expects a `hasheq`.
+Build failed because file tests are still hanging
+Given the lossy nature of JSON encoding, generally, I think round-trip equality is a *lofty goal*, and also quite impractical. At current, a user is forced to reshape the data to meet the contract of `jsexpr?`, when practically speaking, a vector of `jsexpr?` maps equally well to JSON arrays as a list of `jsexpr?` does. And, a `hasheq` maps to JSON objects just as well as an alist of `jsexpr?` keys and values.
+
+That is to say, for serialization, *more* flexibility, even in the face of some of these gotchas (which admittedly aren't JSON specific, as stated), is possibly more important to most people.
+
+For *de*serialization, however, by default keys as symbols for objects makes total sense, though I *would* like to see more customizable behavior, and flexibility in deserialization, too. *Imagine* if the scenario were something like:
+
+```
+> (string->jsexpr "{\"waffle\":[1,2,3]}"
+      #:indexable-constructor vector
+      #:dict-constructor cons)
+'(('waffle . #(1 2 3)))
+```
+
+with sane defaults, of course. Or, perhaps we're going too far into the realm of insanity/impossibility, but contract reflection to reconstruct the most appropriate deserialized representation. In that way, you could get your round trip equality back, when it's truly needed.
+
+But, let's be honest here, if you truly need type for type, round trip serialize/deserialize across languages, JSON is going to be the wrong choice almost always. And if you need the same for Racket only, why aren't you just using `read` and `write`?
+
+
+Allowing jsexprs to contain string keys poses a backwards compatibility problem. Lots of code that converts jsexprs to and from other things, such as the [`flexpr` package](https://docs.racket-lang.org/flexpr/), assumes that a `jsexpr?` value only has symbolic keys. Changing the contract to allow string keys would break code like this, resulting in failing tests, buggy behavior, or worse. I personally don't find much value in string keys for reasons already mentioned by others here.
+
+A separate `jsexpr-convertible?` type which allowed string keys (or even structs with your `prop:json-serialize` property in #1878) might be a safer and more principled way to achieve this user friendliness. It would also follow the existing precedent set by [`pict/convert`](https://docs.racket-lang.org/pict/Conversion_to_Picts.html) for coercing liberal interpretations of a type in the name of usability.
+An empty namespace really is empty: no `lambda` and no application form. Use `make-base-namespace` or use `namespace-require` to import bindings.
+
+A sandbox created by `make-evaluator` is not allowed filesystem access by default. You could use `call-with-trusted-sandbox-configuration`, but my guess is that you don't want a sandbox.
++1 for `jsexpr-convertible?`,
+and for adding keywords (or parameters) to help go directly from JSON data to your favorite `jsexpr-convertible?`
+I can dig this idea. I should have some time early this week to look into this, but will persue the json-convertible? Idea.
+Closing this PR as it presents a backwards incompatible change.
+The backwards incompatibility presented in the discussion of #1876 exists in this PR, too. 
+This does not reproduce on:
+```
+$ uname -a
+Linux prb 4.10.0-37-generic #41-Ubuntu SMP Fri Oct 6 20:20:37 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
+$ racket -v
+Welcome to Racket v6.11.
+```
+This code:
+```racket
+(define f (new frame% [label "test"]))
+(define s (new slider%
+     [label "minimal Longitude"]
+     [parent f]
+     [min-value -1000000]
+     [max-value 1000000]))
+(send f show #t)
+```
+run in DrRacket produces window with slider that goes from `-1000000` to `1000000`. So it might be related to either windows or older version of racket.
+Thanks for the report!
+I just merged https://github.com/racket/racket-lang-org/pull/66 , which fixes it.
+DrRacket 6.11 on Windows 7:
+
+![image](https://user-images.githubusercontent.com/339726/32448807-3e51dc2c-c310-11e7-8319-b4846fe18958.png)
+
+- Racket 6.10.1 and 6.11 show correct behaviour on my Linux (Mint 17.1)
+- so this seems to be a Windows-specific problem
+Thanks!

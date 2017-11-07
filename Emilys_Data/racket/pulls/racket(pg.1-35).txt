@@ -1,0 +1,2803 @@
+Again, use `one-of/c` here.
+
+Is this correct, despite the bizarre API of `fold-files`, which returns different numbers of values at different times?
+
+Can you define a constant for `(make-HashtableTop)`?
+
+@stamourv, did we make this `-Integer` intentionally?
+
+Again, use `one-of/c`.
+
+Can lines and positions really not be `0`?
+
+Use `-lst*` for writing this sort of fixed-length list.
+
+Extra space at the end there. :)
+
+This should have a positive filter saying that it's a `(U -Input-Port -Output-Port)`.
+
+At Sat, 18 Jun 2011 03:53:20 -0700,
+samth wrote:
+
+> >  [bytes (->\* (list) -Integer -Bytes)]
+> >  [bytes? (make-pred-ty -Bytes)]
+> > -[make-bytes (cl-> [(-Integer -Integer) -Bytes]
+> > +[make-bytes (cl-> [(-Integer -Byte) -Bytes]
+> 
+> @stamourv, did we make this `-Integer` intentionally?
+
+Yes. Same story as `vector-ref' and others.
+
+Vincent
+
+What is that story? Since to me, vector-ref seems to use index-type not -Integer. Thus I am unclear on what the correct type is.
+
+(syntax-line stx) → (or/c exact-positive-integer? #f)
+(syntax-position stx) → (or/c exact-positive-integer? #f)
+
+From http://docs.racket-lang.org/reference/stxops.html
+
+I think they are just one indexed.
+
+How do I write that?
+
+`index-type` is always `-Integer`.  We (@stamourv and I) decided that it was too much hassle to require `Index` as arguments to `vector-ref`, for example.  I think the issues are pretty similar here.  
+
+Ok.  
+
+Take a look at the type of `integer?`.  I think the type you want here is:
+
+```
+(asym-pred Univ B (-FS (-filter (Un -Input-Port -Output-Port) 0) -top))
+```
+
+The usual convention is to just write `patss`, `rhss`, etc.
+
+What are these `)))` doing on a new line?
+
+Ya, I have a fix for that and a really corner-corner case it my tree. I can't push because it isn't fast-forward.. trying to figure it out.
+-Ian
+----- Original Message -----
+From: "Sam Tobin-Hochstadt" reply@reply.github.com
+To: "ianj" ianj@ccs.neu.edu
+Sent: Monday, March 12, 2012 2:06:12 PM GMT -05:00 US/Canada Eastern
+Subject: Re: [racket] Added the ability to disambiguate between citations using autobib. (#85)
+
+> -                                        (if with-specific?
+> -                                            (auto-bib-specific bib-entry)
+> -                                            ""))
+> -                                  `(autobib ,(auto-bib-key bib-entry))))))
+> -       ;; (list which key) should be mapped to the bibliography element.
+> -       (define s (resolve-get part ri `(,which ,key)))
+> -       (cons (make-link-element #f
+> -                                (list (or s "???")
+> -                                      (if with-specific?
+> -                                          (auto-bib-specific bib-entry)
+> -                                          ""))
+> -                                `(autobib ,(auto-bib-key bib-entry)))
+> -             (cond [(and disambiguation
+> -                         (or (pair? (cdr disambiguation))
+> -                             (and (null? (cdr disambiguation))
+> -                                  ))) ;; should be a list of bib-entries with same author/date
+
+What are these `)))` doing on a new line?
+
+---
+
+Reply to this email directly or view it on GitHub:
+https://github.com/plt/racket/pull/85/files#r547223
+
+align with frtime above?
+
+move posn-x to previous line?  (same for posn-y and make-posn below)
+
+align with (only-in ...) above?
+
+extra blank line needed?
+
+remove the require if it's not needed
+
+alignment between this line and below is weird (admittedly, it was before also...)
+
+alignment changes here too
+
+this looks a bit suspicious.  do only numbers flow here, or is this code not really used?
+
+ditto
+
+make the file end with a newline?
+
+It looks like numbers only flow here in the demos, but I agree that this looks problematic. 
+
+From:
+http://docs.racket-lang.org/mzlib/mzlib_string.html?q=expr-%3Estring#%28def._%28%28lib._mzlib/string..rkt%29._expr-~3estring%29%29
+
+```
+    (expr->string expr) → string?
+
+  expr : any/c
+```
+
+Prints expr into a string and returns the string.
+
+(define (expr->string v)
+  (let ([port (open-output-string)])
+    (write v port)
+    (get-output-string port)))
+
+> so this change certainly narrows the range of acceptable types to the method from any/c to number?. I think this could change semantics, while it doesn't affect any of the code in demos or gui/demo that depends on fred.rkt. 
+
+Racket doesn't seem to have an analogous procedure. Closest thing I could find is: 
+(define pretty-format
+    (case-lambda
+      [(t) (pretty-format t (pretty-print-columns))]
+      [(t w)
+       (parameterize ([pretty-print-columns w])
+         (let ([op (open-output-string)])
+           (pretty-print t op)
+           (let ([s (get-output-string op)])
+             (if (eq? w 'infinity)
+                 s
+                 (substring s 0 (- (string-length s) 1))))))]))
+
+Could we pull the definition from mzlib/string into it's own module and then require it here and in fred.rkt? Or, we continue to pull in this function-I was hoping to excise all of the mzlib depends haha :) 
+
+Committed change of alignment and require cleanups. Do you happen to know if I need to submit a new pull request?
+
+Done. 
+
+Done. Requires cleaned up and Dr.Racket formatting used. 
+
+Removed. 
+
+Require was removed. 
+
+I fixed alignment here. 
+
+On Thu, Aug 23, 2012 at 12:35 PM, Patrick Mahoney
+notifications@github.comwrote:
+
+> Do you happen to know if I need to submit a new pull request?
+
+You can update an existing pull request.
+
+## 
+
+sam th
+samth@ccs.neu.edu
+
+Fixed. Require cleanup + Dr. Racket formatter was applied. 
+
+Fixed. 
+
+The in-string procedure may be dead (I don't see any references to it in this file or the demos).  Maybe verify that that's the case and just delete it?
+
+I think the use of expr->string in frp-snip.rkt should be exercised very rarely -- afaict, you'd need to create a switching signal that starts as an event and then becomes something else.  If you want to try it, set the language level to FrTime and do:
+
+(define c (new-cell (changes seconds)))
+c
+(set-cell! c "not a number")
+
+This desperately needs to be cleaned up, but for now is it safe to just replace it with (format "~a" ...)?
+
+in-string in is dead-removed in commit ea67ac399ad8ea470319b4a0bb47a1745f8c43e8. 
+
+I made the suggested change (replacing number->string with format). After exercising the change using the snippet you provided, it looks okay-no exceptions. In addition, there doesn't appear to be problems in any of the animations. 
+
+This was in 1b7fea70b490c2e2ccf0d9b7b1f21955a2b7ccb1
+
+Is there a reason that the other two examples of `Univ` shouldn't be `ManyUniv`?
+
+That should be fine, though I'll have to try it to be sure.
+
+Why does this return `Univ`?
+
+Can you add `continuation?`?
+
+Do these all have to be invariant?
+
+Can you add a good error message then?
+
+Should probably be `@racket[_t]`
+
+Try to remove trailing whitespace.
+
+What would the type of that be? Would it just have a filter for `Procedure`?
+
+Try not to use `λ _` -- make the number of arguments explicit.
+
+Mark keys, yes (they're like boxes). Not sure about prompt tags, will think about it (it's a safe choice for now).
+
+Same here.
+
+I'll remove trailing whitespace in all those files in a separate commit when I do the commit surgery.
+
+There should be a case for `Prompt-Tag` that compares in both directions, I think.  Isn't that what `Box` does?
+
+A positive filter for `Procedure-Top`, negative filter of `Top`.  But even
+without filters, it's important for it to have a type.
+
+On Thu, Nov 29, 2012 at 3:13 PM, Asumu Takikawa notifications@github.comwrote:
+
+> In collects/typed-racket/base-env/base-env.rkt:
+> 
+> >  [call-with-continuation-barrier (-poly (a) (-> (-> a) a))]
+> > 
+> > ## -[continuation-prompt-available? (-> -Prompt-Tag B)]
+> > 
+> > -[make-continuation-prompt-tag (->opt [Sym] -Prompt-Tag)]
+> > -[default-continuation-prompt-tag (-> -Prompt-Tag)]
+> > -[continuation-prompt-tag? (make-pred-ty -Prompt-Tag)]
+> > +[continuation-prompt-available? (-> (make-Prompt-TagTop) B)]
+> > +;; TODO?: continuation? is missing
+> 
+> What would the type of that be? Would it just have a filter for Procedure?
+> 
+> —
+> Reply to this email directly or view it on GitHubhttps://github.com/plt/racket/pull/182/files#r2272534.
+
+## 
+
+sam th
+samth@ccs.neu.edu
+
+You mean as opposed to `ManyUniv`?
+
+`Box` is only one direction, I think. When would you ever want a `Prompt-TagTop` to be a subtype of any `(Prompt-Tag s t)`?
+
+ManyUniv is misused here, is only valid in the result type of an arrow type. ManyUniv corresponds to any, while Univ corresponds to any/c. This isn't actually implemented though.
+
+Right, you want (Any \* -> Any) for the type here.
+
+On Sat, Dec 1, 2012 at 3:00 AM, Eric Dobson notifications@github.comwrote:
+
+> In collects/typed-racket/base-env/base-contracted.rkt:
+> 
+> > -  (provide default-continuation-prompt-tag)
+> >   +
+> > -  ;; default tag should use Any wrappers
+> > -  (define default-continuation-prompt-tag
+> > -    (contract (-> (prompt-tag/c any-wrap/c #:call/cc any-wrap/c))
+> > -              -default-continuation-prompt-tag
+> > -              'typed 'untyped)))
+> >   +
+> >   +(require (for-template (submod "." contracted))
+> > -         (submod "." contracted))
+> >   +
+> >   +(provide default-continuation-prompt-tag)
+> >   +
+> >   +;; set up the type environment
+> >   +(define-initial-env initialize-contracted
+> > -  [default-continuation-prompt-tag (-> (make-Prompt-Tag Univ (-> ManyUniv Univ)))])
+> 
+> ManyUniv is misused here, is only valid in the result type of an arrow
+> type. ManyUniv corresponds to any, while Univ corresponds to any/c. This
+> isn't actually implemented though.
+> 
+> —
+> Reply to this email directly or view it on GitHubhttps://github.com/plt/racket/pull/182/files#r2285415.
+
+## 
+
+sam th
+samth@ccs.neu.edu
+
+This currently passes.  Any particular reason that you're adding it?
+
+Why move this into the main file?
+
+Nit: add the function name before the signature.
+
+Please add a signature for this function.
+
+Use internal `define`.  Also, what are the types of `arg-types` and `new-arg-types`? I think `arg-types` is a `Listof[Type]`.
+
+Is there a `dict-empty?` we can use here?
+
+Nit: [] for bindings.
+
+Signature.
+
+Does this loop need to handle other cases of unfolding?
+
+Not that I can remember, will delete it.
+
+Why not? My guess at the reason it was separated was that it was written before begin-for-syntax was supported and thus a separate module was the only way to support sharing syntax classes across macros.
+
+Not yet.
+
+It didn't before. The other kinds of unfolding are Names which are always structs and Apps which again are always structs I believe, so my guess is no.
+
+Actually there is no hash-empty? either, so as far as I can tell this would be the most idiomatic way to write it. I could change '(= 0' to '(zero?' though.
+
+Well, we should fix both of those long term, but the current code is fine.
+On Apr 24, 2013 8:31 PM, "Eric Dobson" notifications@github.com wrote:
+
+> In collects/typed-racket/typecheck/tc-lambda-unit.rkt:
+> 
+> > ## 
+> > 
+> > -;; syntax-list[id] block -> lam-result
+> > -(define (tc/lambda-clause args body)
+> > +;; formals syntax listof[Type/c] tc-result option[Type/c] option[(cons Type/c symbol)] -> lam-result
+> > +(define (tc/lambda-clause/check formals body arg-tys ret-ty rest-ty drest)
+> > -  (check-clause (formals-positional formals) (formals-rest formals) body arg-tys rest-ty drest ret-ty))
+> >   +
+> >   +(define (tc/opt-lambda-clause arg-list body aux-table flag-table)
+> > -  (let\* ([arg-types (for/list ([a arg-list])
+> > -                      (get-type a #:default (lambda ()
+> > -                                              (define id (dict-ref aux-table a #f))
+> > -                                              (if id
+> > -                                                  (get-type id #:default Univ)
+> > -                                                  Univ))))]
+> > -         [new-arg-types
+> > -          (if (= 0 (dict-count flag-table))
+> 
+> Actually there is no hash-empty? either, so as far as I can tell this
+> would be the most idiomatic way to write it. I could change '(= 0' to
+> '(zero?' though.
+> 
+> —
+> Reply to this email directly or view it on GitHubhttps://github.com/plt/racket/pull/276/files#r3950661
+> .
+
+Use `in-list` here (and in similar places).
+
+Can we use `cond` and internal `define` here?
+
+Combine this `if` and the `cond` that in the then branch.
+
+Add comments for each of these clauses saying what kind of lambda we are in.
+
+Is this definition being used (implicitly) in the old code?
+
+Yes. PR/287 fixes it.
+
+I am not sure I understand the logic here. The code checks first libpng15 if that fails then checks for libnpng16. Shouldn't  it be the other way around first libpng16 if that fails check for libpng15.
+
+Secondly does the package build for arch with this patch as it does not for opensuse
+
+Ugly style.
+
+This should stay #f, and the places where it's turned on elsewhere are mistakes.
+
+Is the issue that line 1081 should be split so that 'has-kw?' and 'has-opt?' are on different lines or is it something else?
+
+Yes, that's what I meant.
+On May 29, 2013 11:49 AM, "Eric Dobson" notifications@github.com wrote:
+
+> In collects/typed-racket/base-env/prims.rkt:
+> 
+> > @@ -1077,7 +1075,10 @@ This file defines two sorts of primitives. All of them are provided into any mod
+> >           (values
+> >             (ormap keyword? (map syntax-e arg-list))
+> >             (ormap syntax->list arg-list)))))
+> > -      (opt-lambda-property (kw-lambda-property d has-kw?) has-opt?)]))
+> > -      (opt-lambda-property
+> > -        (kw-lambda-property
+> > -          (syntax/loc stx (λ formals . body))
+> > -          has-kw?) has-opt?)]))
+> 
+> Is the issue that line 1081 should be split so that 'has-kw?' and
+> 'has-opt?' are on different lines or is it something else?
+> 
+> —
+> Reply to this email directly or view it on GitHubhttps://github.com/plt/racket/pull/359/files#r4437469
+> .
+
+Can we just add a call to resolve here instead of dealing with all the cases (Mu, App, and soon RecName) below?
+
+I was thinking of (match (resolve ty) ...) instead of a specific check for needs-resolving? since resolve does that check already.
+
+Can you explain the interpretation of this data representation here?
+
+Can you describe the type of the function generated here?
+
+What does this line do?
+
+Line length? Perhaps we should take "whatever github displays without a scrollbar" as the line length convention.
+
+I don't understand why this always returns a `Poly`.
+
+From which modules?
+
+When does this ever happen?
+
+Can we have an actual 1-line purpose/contract, in addition to the very nice larger comment.
+
+Is there a reason to have `resolve-name` be one function and/or not just inline it into `resolve-once`?
+
+If the `RecName` was already seen in the environment, it uses the recorded identifier (because it's a reference to a recursive contract). It works just like contract generation for `Rec` in that regard.
+
+I don't quite understand the question. The alias can only depend recursively on other aliases in the same scope, since a mutually recursive alias through another module would result in circular module loading.
+
+It happens if you screw up in the implementation, but it's nicer to get a real error instead of a `dict-ref` failure or something.
+
+If `args` is non-false, then the type alias was declared with type arguments. We know that any type alias with type arguments will map to a `Poly`.
+
+Yes, it's referenced in `tc-structs.rkt`. Other than adding another case, this function is unchanged.
+
+Right, I just mean that it can, I think, depend on aliases that aren't in this list if they're in another scope. 
+
+Then it should use `int-err`.
+
+Does that reference need fixing? I think it doesn't, and that we should inline the two-case version into resolve-once.
+
+The interp should explain the components.
+
+Does the whole thing need to be mutable?
+
+There should be a way to write this that doesn't double-allocate. :(
+
+note that this doesn't check contractiveness of Rec types.
+
+Inline this def.
+
+Why is `Err` the right choice here?
+
+use the new `member` :)
+
+here too.
+
+Use `in-list` here (and elsewhere).
+
+I don't think there's any need to, since the contractiveness of `Rec` types is checked in `parse-type.rkt`.
+
+The type that's registered here should never be observable. In case it does get observed, `Err` is fine because it can't be used. `Bottom` doesn't work IIRC because there are contexts where it's not allowed.
+
+I agree, just noting.
+
+This is using submodules instead of toplevel modules. Last time I tried to do this @samth commented that top level modules were better for tests, but that was around the introduction of submodules. Have things changed?
+
+What is this matching? I think you want a literal or literal-set here.
+
+I thought define-syntax was already ignored (not typechecked) by default, is there a reason that we need to add this here?
+
+No need for quasisyntax/loc over syntax/loc.
+
+What about (for/dict initial-value <for-sequences> <bodies>) that did a loop of dict-set operations? 
+
+Remove reference to RecName.
+
+Remove debugging statements?
+
+Personal style but I would add a local variable for a struct field that is referenced four times.
+
+Isn't this the same structure on both sides of the if?
+
+Not sure, but the use of `ignore` is in the master branch too. @samth?
+
+Yes, `define-syntax` is ignored in general.  I think it's good to keep the `ignore` here explicitly -- even in we looked at `define-syntax` at some point, we wouldn't want to look at this one.
+
+When does this branch get triggered given the additional lines above?
+
+Finish the sentence here?
+
+What if it is not polymorphic?
+
+You are shadowing tha args above, can you use a different name?
+
+Just use resolve.
+
+Why is the empty list not for none?
+
+Do we want to call out polymorphic recursion?
+
+I should probably specify `#f` for the last `Name` field for the above two cases.
+
+The `args` field is non-`#f` only if the type is polymorphic. I can add a comment along those lines.
+
+I'll add a sentence at the end indicating that it's not allowed.
+
+Could both of the definitions of `extract-struct-info*` go into a helper module that is used in both places?  The duplication of definition bothers me since the original definition was wrong.
+
+This function is used only once -- it should just be inlined.  The same is true of `get-let-name` and `let-name`.
+
+It's ok to merge w/o doing this, but leave a comment if you don't.
+
+Let's finally kill these abbreviations.
+
+Mention `expected` in the comment here (and below).
+
+Can we use `phase1-eval` from `unstable/macro-testing` here?
+
+Could this use `build-struct-names`?
+
+I think the original way this was written, with `syntax` written out, is more readable.  Even better might be to use `quote-syntax` here.
+
+When does this case (and the ones below) occur?  Shouldn't that have been an expansion error earlier?
+
+Could we just use `def-binding` everywhere in this code and ditch all the `cons`s?
+
+Add a comment referencing the paper here.
+
+IIRC, this step of abstracting the identifiers doesn't occur in the paper (because the arrows carry around names). Do you want me to contrast this approach to the paper then?
+
+I think this, and some of the other test files, could be unit tests instead.
+
+Some comments here would be nice. :)
+
+Also, can we make `type-case` introduce an internal def ctxt so that we can use `define` instead of `let`?
+
+More in this comment.  Give an example, maybe?
+
+On Wed, Sep 11, 2013 at 4:51 PM, Asumu Takikawa notifications@github.comwrote:
+
+> Do you want me to contrast this approach and the paper then?
+
+Yes, please.
+
+The trouble with that is ambiguity in the parsing, I think. Right now the `type-case` macro just installs the last expression as the body and the others as patterns. To put in an internal definition context, it'd have to know where the patterns end (unless we put the patterns in parens).
+
+That's true, but I'm inclined to leave this as is since the parsing unit tests don't let you specify what error message was thrown (and part of the change this is testing is that the right error message appears).
+
+Ah ok, this is a parser test.  That's fine then, but the other two can just be unit tests.
+
+I say that b/c it's so much faster to run the unit tests that it's best when as many bugs as possible are caught by them.
+
+Ok, converted those to unit tests.
+
+I'll leave a comment because there should be code that tests the object code paths more, and this needs to be seperate for those to be written.
+
+No it is a macro which does the evaluation at expansion of the module instead of at test time.
+
+Done.
+
+Done.
+
+Yes, much better solution.
+
+No, there are some interesting test cases that break without this. The tests may be incorrect. I added a comment.
+
+Maybe use `~a` here too?
+
+Can we figure out what the arity is?
+
+I think this is really about types that are converted to these kinds of contracts.
+
+What about just using the first-order/higher-order distinction here?
+
+Can we just use the names of the vars here?
+
+"a struct with at least one mutable field"?  And also "expected a ... contract but got a ... type" seems wrong.
+
+Just tried that, but it turns out that the variables are the gensymed ones at this point. Might work out if I use `Poly-names:` elsewhere, so I'll do that in a follow-up commit.
+
+Can't we use `ctx` here now?
+
+Shouldn't this be setting the cache to (and res #t). This reduces the number of cache misses I get, but doesn't seem to make it go faster in my 2 run comparison.
+
+Why change this? Just to avoid the parameter lookup? It never is getting used with only two arguments now.
+
+Fix the indentation here before submitting.
+
+This is the same check as in subtype, just written differently. When does that fire but this one does not?
+
+This gets the recursive calls to `subtype*`, which don't go back through `subtype`.
+
+Yeah, parameter lookup is slow. But I should just remove the two-arg form.
+
+Good catch.
+
+Right, my question was the other way around. Why do we need that one, shouldn't this catch all of them?
+
+Should e0 and e1 be exprs as well? Also, not a big thing but I read #:return-when as "Return e0, when e1" which is wrong, but don't have a good alternative name.
+
+Should we add a better contract on the first arg given the new unsafe ops on the elements in it? Or maybe just on seen?.
+
+If we put a definition in type-rep.rkt for unsafe-Type-seq, would we get the same speed? I think it would be more readable.
+
+Why are the previous acccessors unsafe but not these?
+
+Is this to avoid calling remember till use? Can you add a small comment to that effect?
+
+I might be missing something, but where is failure-cont defined?
+
+Why do we need the case on line 277 if we have this? This seems faster to check.
+
+Reuse ss and st?
+
+This seems separate from the rest of the subtype, but if we want this on one of the cond-contract forms it seems we would want it on all of them.
+
+These turn out to be never true, because the key for structs is `'(struct procedure)` so I'm dropping them.
+
+I think some abstraction in the documentation here might be nice.
+
+I don't think `failed-typecheck` is the right name here, because our typecheck _isn't_ failing, the user is asking it to fail.  I'd stick with `typecheck-fail`.
+
+Should we move this `parse-type` into the syntax class?
+
+This one too?
+
+This could also be a syntax class.
+
+And this.
+
+Thank goodness for `syntax-parse`.
+
+The issue is that all the other ones read easily as nouns, typecheck-fail reads more as a phrase.
+
+As of now all of these classes are just parsing the syntactic form and letting the use look at the binding. I'll submit this and then look at what doing more would require.
+
+Same.
+
+This is turning into something much larger than expected, so I'll wait and get it reviewed in a seperate push.
+
+Going with typecheck-failure to keep the noun and put the noun on the failure side instead of the checking. Also because typecheck-fail is taken by the user exported name.
+
+On Wed, Nov 13, 2013 at 11:15 AM, Eric Dobson notifications@github.comwrote:
+
+> Going with typecheck-failure to keep the noun and put the noun on the
+> failure side instead of the checking. Also because typecheck-fail is taken
+> by the user exported name.
+
+Sounds good.
+
+This line looks like the `module` bug you just found (and looks totally wrong).
+
+This should probably be `(-values t)`.
+
+Fixed. Yeah I saw this which is how I found out about the bug.
+
+Fixed.
+
+I think there should be a `(gen-tests-main)` here.
+
+Done.
+
+This looks like it doesn't handle vectors, boxes, etc in syntax.
+
+Which, I grant, wasn't handled before either, so maybe it's ok?
+
+Drop this `let`.
+
+It wasn't handled before, and it is really only used for the exception handlers right now so could in fact be a lot less general than it is.
+
+Unless I'm mistaken, I think this line 49 should be sufficient -- you don't need the previous two lines 47 and 48?
+
+Thanks for thinking to add this example to the test source file, `example.scrbl`.
+
+However, in the commit I don't see the test output file updated, `example.md`.  Wouldn't you need to change that, too, for the tests to pass? 
+
+IIUC seems like:
+1. Should have a new `# Title` line in it.
+2. All the existing section heads should now be shifted one level lower -- e.g. `# Section Level 1` would now be `## Section Level 1`.
+
+Or am I misunderstanding?
+
+This doesn't allow for #:more
+
+If this should return a type it should be contracted as such. But I believe it can return a type or tc-results or other things.
+
+This line should be aligned with the others.
+
+Do we have to worry about the case where final-msg has ~s that we don't intend it to have and that causes the later formatting call to have problems?
+
+I think this error message lost some of its readability. Reading it I don't get why it fails it just says expected: a, given: a, where the old message had something about them being different. Being bound in different scopes doesn't seem like its an issue to me. 
+
+This is assuming I'm someone who doesn't understand TR internals.
+
+Do we want consistentcy and thus should always use numerals?
+
+Would it be better if it looked like this?
+
+```
+; readline-input:4:16: Type Checker: type mismatch
+;  type variables bound in different scopes
+;   expected: `a'
+;   given: a different `a'
+;   in: x
+; [,bt for context]
+```
+
+I triggered a problem like that when I was testing this code, which is why the `vals` in this function are passed through to `tc-error` instead of formatted here (avoiding problems when a user writes the type `(quote ~a)`). 
+
+This seems to work given the assumption that neither the base `msg`, the `more` message string, nor the `field` strings have format directives. Since these are all under the control of us, the TR implementors, this seems fine. (though I should document these caveats then)
+
+Really the right thing is to say where the `a` is from, but that might require a lot more work.  Perhaps just leave a comment to that effect?
+
+I agree with @shekari. Racket appears to use numerals everywhere in error message.
+
+The alignment appears to actually be correct, it's just that there's a tab character in the source. I'll remove it.
+
+Which contracts?
+
+Looks like this re-does a bunch that `env-lang.rkt` does as well.  Can that be abstracted?
+
+I'm pretty sure we already have a type defined for `(-val '())`.
+
+Contracts from the types that are specified, to check that the types make sense.
+
+Potentially, but I'm not sure how much that abstraction would buy us. Did you have something specific in mind?
+
+No, not specifically, but hate the feeling that we're doing complicated stuff like this many times.
+
+I'm still confused.  Would be generate contracts and treat the functions as if they were untyped?
+
+Well, we could just have a switch for testing/debugging purposes that would treat them like they were untyped. That's what I meant in the comment. Or we could use option contracts.
+
+Don't we need to check if they are both StructTypes in case one side needs to be resolved?
+
+Add a test for this.
+
+I think this case should be fine, because there are two earlier match clauses that check for "unresolvedness" and will resolve and recur. Or did you mean resolve inside the `StructType`?
+
+Inside the StructType.
+
+From something like this.
+
+(struct foo ())
+
+(define-type bar foo)
+(: f (Struct-Type bar))
+(define f (ann (error 'nyi) (Struct-Type foo)))
+
+On Sun, Dec 29, 2013 at 12:56 PM, Asumu Takikawa
+notifications@github.comwrote:
+
+> In pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/types/subtype.rkt:
+> 
+> > @@ -460,6 +460,8 @@
+> >           [((Struct: nm _ _ _ _ _) (StructTop: (Struct: nm\* _ _ _ _ _)))
+> >            #:when (free-identifier=? nm nm*)
+> >            A0]
+> > -         ;; All struct-type types are subtypes of the struct type top type
+> > -         [((StructType: _) (StructTypeTop:)) A0]
+> 
+> I think this case should be fine, because there are two earlier match
+> clauses that check for "unresolvedness" and will resolve and recur. Or did
+> you mean resolve inside the StructType?
+> 
+> —
+> Reply to this email directly or view it on GitHubhttps://github.com/plt/racket/pull/531/files#r8579879
+> .
+
+I tried that and it looks like it type-checks fine (will add it as a test). When a `Struct-Type` is parsed, it will resolve the struct name anyway, so no user-written types should contain unresolved aliases. Internally constructed types (e.g., from the base type environment) should also not contain unresolved aliases.
+
+(though maybe adding implicit recursive aliases will complicate this?)
+
+Give these simple types -- it's bad to have things with no type.
+
+Same here.
+
+This is of course a point we make in our class papers. :)
+
+This is a fairly minor point, but maybe a different name would help here since `recursive-contract` is already a binding in `racket/contract`. I was initially confused why `recursive-contract` was showing up in `type->static-contract`.
+
+`(in-hash vars)` here? Similarly, `(in-list ...)` below maybe?
+
+This sounds like the terminal contracts define by `define-terminal-contract` in another file but presumably they are for different purposes. Can you expand a bit in the comment here?
+
+Done.
+
+Done.
+
+Done.
+
+We need a name for the subtype cache type.
+
+Was this just wrong before?
+
+How did this ever work?
+
+I think the interpretation of `s` and `t` were flipped. I didn't notice the optional issue until Eric pointed it out. It could be a good idea to swap the order of `s` and `t` like Eric suggested. I didn't do it to avoid changing this function's callsites, but I could make that change.
+
+I'd prefer to make the whole file consistent about `s` and `t`.
+
+What else might t1/t2 be?  I can think of: tc-results, Values, and maybe others. Do we need formatters for them?
+
+Contracts/purpose for these functions?
+
+Do we really want to use `display`?
+
+`write-string` might be better here
+
+I think `append` would be clearer here.
+
+I'd split the `->` out from the cases here.
+
+Should this handle `\r\n` as well?
+
+Yes, because in most cases printing should either hit a symbol as a base case (e.g., `String`) or a compound s-expression (e.g., `(Listof ...)`). So we want either `write` or `display` and not `print`. Of those two, we want `display` because of two hacks I used: singleton types print to a string that is their written form and keyword arguments in function types print to strings to preserve square brackets. Those strings should appear unquoted in the printed type.
+
+For its uses in TR, I think handling `\n` suffices but I'll test it on Windows sometime and fix it if it's broken.
+
+I think that `expected-but-got` is only ever called on a type or a string (like `"2 values"`). The type is extracted from the results struct first. Pretty print functions for those other cases might still be useful though.
+
+Why the `'`?
+
+Much nicer!
+
+`literals` doesn't seem like a good name.
+
+Here too.
+
+Here too.
+
+Is this use `syntax-local-phase-level` the key change?
+
+No, the key change is the 3rd argument from `(syntax-local-phase-level)` (i.e. template) to `#f` for label. The forth argument defaults to the value of the third, but we want to keep it at `(syntax-local-phase-level)`.
+
+Because I thought importing just `#%datum` and using it would be more confusing.
+
+Why is taking out this loop ok? Are we guaranteed never to merge these properties?
+
+I think `tc/expression` is a confusing name here -- I know we can't use `tc/#%expression`, but something to indicate the real purpose would be good.
+
+This should be `(or/c #f syntax?)`, right?
+
+We could use `<` here.
+
+Nit: `[]`.
+
+Or internal-`define`.
+
+Merge this `if` into the `match` below.
+
+Why are we dropping these tests?
+
+Why does this change affect the optimizer output?
+
+Why are there fewer optimizations here?
+
+Isn't that a valid identifier?
+
+```
+Welcome to Racket v6.0.0.1.
+-> (define tc/#%expression 3)
+-> tc/#%expression
+3
+```
+
+Oh, great.  I thought it only worked at the beginning.
+
+Yes, because merging the properties happened because two annotations could apply properties to the same syntax object. Now since they are on the `#%expression` that cannot happen.
+
+Not sure exactly, but it looks like it is better. The dead else branch was not at the module begin but inside the for loop. My guess is that the `#%expression` allowed it to find it correctly.
+
+Because they were broken (in terms of phasing) and didn't offer any more coverage than our typecheck tests of similar programs.
+
+Because the optimizer can no longer see through type annotations. The type of the expression is (Vectorof Integer) not (Vector Integer Integer Integer).
+
+I assume you meant `(or/c tc-results/c #f)`, which is correct.
+
+If 0 or 2+ values are expected, we could give a better error message.
+
+I think this should give a better error message already, because it calls `tc-expr` and then that's checked against the expected type later. Example:
+
+```
+Welcome to Racket v6.0.0.1.
+-> (ann (lambda (x [z 0] #:y y . args) x) (values 1 2))
+; readline-input:1:5: Type Checker: type mismatch;
+;  mismatch in number of values
+;   expected: 2
+;   given: 1
+;   in: (lambda (x (z 0) #:y y . args) x)
+; [,bt for context]
+; readline-input:1:5: Type Checker: type mismatch
+;   expected: One 2
+;   given: (case-> (Any #:y Any Any * -> Any) (Any Any #:y Any Any * -> Any))
+;   in: (lambda (x (z 0) #:y y . args) x)
+; [,bt for context]
+; Type Checker: Summary: 2 errors encountered [,bt for context]
+```
+
+Can you name the blanks for future readers?
+
+What case is the formals not a syntax list? I thought rest arguments had a special convention, and so the number of arguments was always static.
+
+None of your tests seem to trigger this branch AFAICT, can you add one or make this an internal error if you believe it is impossible.
+
+Can you add some test cases with two or more keyword arguments for mixed optionality and all optional. It seems there is only one test case where they are both mandatory.
+
+There are at least two lambdas and two sets of formals involved here. This is from the `case-lambda` in the expansion, rather than the core lambda that's type-checked. When there's a rest argument, it's an improper list:
+
+```
+(case-lambda
+  ((given-kws given-args . rst)
+   (#%app unpack8 given-kws given-args rst)))
+```
+
+The rest argument only appears to show up in the branch of the `case-lambda` with all the arguments, hence the `+inf.0` in this code.
+
+I'll make it an internal error. I've never been able to trigger that branch with any examples so far.
+
+I don't understand the notation in this comment.
+
+Can you put the kw-lambda first?
+
+What was the reason for choosing class instead of class:, like we do for struct: and for:?
+
+This import seems unused.
+
+Isn't this identifier in kernel-form-identifier-list, or is this a different `#%app`?
+
+What is the syntax object? Is it the entire clause, or the part after the kind?
+
+Is the fourth argument supposed to be `Listof<Option<Type>>`?
+
+Should this be a ~literal instead, and in that case you should be using literal-sets.
+
+should this be `#:attr optional? #t`?
+
+Why use `~optional` here and not in method-decl?
+
+Do we want a syntax class for the `(~datum :) type:expr` thing that keeps on getting repeated?
+
+`#:attributes` clause?
+
+`#:attributes` clause.
+
+Can we get a syntax class for these?
+
+You should be able to just do `:class-clause` and not have to pipe the data through the new syntax class.
+
+Should these be moved to the rest of the TR tests?
+
+Not sure why you are only checking the first two elements and assuming they are ids. Also the final clause looks wrong.
+
+Name and docs seem out of sync.
+
+Can we reduce the duplication here?
+
+Can you use the syntax-properties library we have. That should prevent forging of syntax properties.
+
+Can we move these to a different file, I think this one is already too big.
+
+It was originally `class:` (that is now squashed out of commit history), but I found that when writing examples I wrote `class` by mistake and got very confusing errors all the time.
+
+It may also be worth considering changing `struct:` to `struct` and `for:` to `for`, etc. too. The typed versions of these shouldn't be ambiguous with the untyped grammars.
+
+OTOH, if the consensus is that this is a bad idea I can change it to `class:`. But in that case, we should put more effort into making the non `:` versions produce more useful error messages.
+
+I think it's a different one, i.e., not `#%plain-app` in the kernel list.
+
+No, the `optional?` is interpreted as whether the init argument is optional, which depends on if a default value expression is provided or not. (I can add this in a comment on the syntax class)
+
+The nesting level is different. Fields always have a default value.
+
+Can we switch back to `base`?
+
+And here ...
+
+Looking forward to your optional arguments syntax here :)
+
+I like this general trend, especially with `for`, since we should strive to just allow mixes of annotations wherever needed.  `struct` is a little less clear, since it's always a change that's required.
+
+I really wish we could re-use some of this from the `class` docs.
+
+This should probably be moved up, maybe after "libraries".
+
+?
+
+When is "later"?
+
+Which `#%app` is it, then?
+
+Are these the same errors as from `class`?
+
+Now. :p
+
+I think the import is necessary, but it's accessing internal exports from the class system so it's an abstraction violation.
+
+Then can you add a comment about exactly what is imported, and why?
+
+Would it be useful to have a super-struct for both `clause` and `non-clause`?
+
+I find this re-use of `id` confusing.
+
+I don't understand how this is "method-like".
+
+This should have "FIXME" in it, I think.
+
+Why are you switching back and forth between `#:literal-sets` and `~literal`?
+
+Is the behavior with no name bound documented/expected to stay in `syntax-parse`?
+
+`in-list`
+
+I think you can use the `failure-result` argument to `dict-update` to remove this `if`.
+
+Have we asked @mflatt or @rmculpepper about how to do this with less magic?
+
+Since this has no dependencies on classes, can you put it in a separate utility module? It really should be a separate library that Racket provides.
+
+Since these are unit tests for unexported stuff, I think it's reasonable to have them here.
+
+Why?
+
+I agree.
+
+Looks like an abstraction is needed here.
+
+typed-racket-lib shouldn't have any dependencies on rackunit. The other
+issue is that if they are seperate they won't get run when someone runs
+typed-racket-test/tests/typed-racket/run.rkt --all.
+
+On Thu, Jan 30, 2014 at 7:26 AM, Sam Tobin-Hochstadt <
+notifications@github.com> wrote:
+
+> In
+> pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/base-env/class-prims.rkt:
+> 
+> > -               (cons stx (loop (cdr stxs)))]
+> > -              [_ (cons stx (loop (cdr stxs)))])])))
+> >   +
+> > - ;; add-names-to-intdef-context : Intdef-Ctx Dict<Id, Names> -> Void
+> > - ;; Establish accessor names in the internal definition context
+> > - ;; to avoid unbound identifier errors at this level
+> > - (define (add-names-to-intdef-context def-ctx name-dict)
+> > -   (define (add-kind kind)
+> > -     (define names (map stx-car (dict-ref name-dict kind null)))
+> > -     (syntax-local-bind-syntaxes names #f def-ctx))
+> > -   (add-kind #'init-field)
+> > -   (add-kind #'field)
+> > -   (add-kind #'public)
+> > -   (add-kind #'pubment))
+> >   +
+> > - (module+ test
+> 
+> Since these are unit tests for unexported stuff, I think it's reasonable
+> to have them here.
+> 
+> —
+> Reply to this email directly or view it on GitHubhttps://github.com/plt/racket/pull/554/files#r9308656
+> .
+
+It's the standard Racket `#%app` AFAIK.
+
+It is documented, though hard to find (from docs for `~var`):
+
+> If pvar-id is _, no attributes are bound. If pvar-id is the zero-length identifier (||), then pvar-id is not bound, but the nested attributes of syntax-class-use are bound without prefixes.
+
+Well, right now it depends on `disarm` which depends on getting the inspector from this module. I'm also not sure this is the right thing to put in a separate library, partly because I don't understand the magic. Ideally, someone who knows what they're doing like @rmculpepper would write that library.
+
+Would you be okay with `id:identifier`?
+
+No, this error should never be raised. It's just there for literal matching.
+
+You could put expand-expressions in a separate module and then provide it using protect-out.
+
+Also, the magic looks slightly wrong. I'll send a separate message about that.
+
+Can you add attribute declarations? With that, you should be able to use `(pattern :mandatory-kw-tys)` (maybe with `#:auto-nested-attributes`) and not have to plumb Keyword through.
+
+I think we should parse prefix types first and cut after the ->. It should allow syntax parse to give better error messages in many cases.
+
+The cut after the colon was dropped here, was that intentional?
+
+Might this be cleaner with a different syntax class, like `raw-kw-tys` that has the pattern `(~seq kw:keyword type:expr)` and two attributes mandatory and optional.
+
+This seems wrong. tc-expr means typecheck and infer a type, tc-expr/check means typecheck given a type. Thus passing in tc-any-results means that we are going to type this expression as tc-any-results which is not what is intended.
+
+Also this is too late because now both tc-expr and tc-expr/check will call add-typeof-expr.
+
+This syntax seems interesting, I can understand supporting no parens with infix but it makes less sense with prefix.
+
+Instead of interesting, I'd say a bad idea. :-)
+
+I didn't change how All-bodys are parsed. Arguably, it should change, but what should the rule be for disallowing that prefix `->`? After all `(All (A) -> Number)` is a valid infix arrow function type but `(All (A) -> Number Number)` is not, so it can't be just based on the position.
+
+On the flip side, it's not actually ambiguous so maybe it's fine?
+
+I believe the easiest check is that there is exactly one sexp after the ->.
+
+I think we'll also need to re-arrange the cases for that to work, since by cutting after the `->` you force the function to have a filter (in this particular case). Re-arranging the cases will break how function types with filters will parse though, unless we complicate the syntax classes for types (by excluding `:`).
+
+Do we have a grammer of what valid forms are that we are trying to parse?
+
+That would rule out this type: `(All (a) -> a : #:+ (1 @ x))` so it probably has to be "exacty one sexp after the `->` but before a `:`". (although probably nobody writes types like this)
+
+(I'm not sure the extra code complexity to check this "no prefix in the unparenthesized All-body" is worth it)
+
+If we're moving in the direction of prefix arrow, I'm fine w/ ruling that
+out.
+
+I agree with Asumu. The transition from `(All (A) -> Number)` (working) to `(All (A) -> Number Number)` (not working) would be confusing.
+
+I feel like some more syntax classes might help here.
+
+I think if we're moving in the prefix direction, we should think of the un-parenthesized `All` notation as obsolete.
+
+While I could add some syntax classes here, they would be one-time use syntax classes, so that doesn't seem like it would be much of an abstraction. Was there a specific abstraction you had in mind?
+
+Well, if it's obsolete should we avoid adding more code to single out these corner cases?
+
+I'm not sure what you mean.
+
+On Mon, Jan 20, 2014 at 1:56 PM, Asumu Takikawa notifications@github.comwrote:
+
+> While I could add some syntax classes here, they would be one-time use
+> syntax classes, so that doesn't seem like it would be much of an
+> abstraction. Was there a specific abstraction you had in mind?
+
+I feel like this objection is similar to not wanting to let-bind used-once
+identifiers.
+
+@rmculpepper Any update on that? Also, do you think it's something that blocks the PR from being merged or can it be fixed later?
+
+I think it can be fixed later. I emailed Matthew about a related issue, but it turns out not to have much to do with this function.
+
+Did this internal error go away?
+
+What about this one?
+
+Yes, as far as I can tell. If someone finds a way to reproduce it I'll fix it.
+
+Same as above.
+
+This is the change causing that syntax error.
+
+Is there a PR number for this?
+
+Not for the TR problem, but for the underlying match issue. See pr/14379.
+
+Can you give an example of how this message appears?
+
+This contract seems wrong -- the second return value is a list of 3-element lists.
+
+Use `parameterize`.
+
+This defines 3 maps, not 2.
+
+This could be more nicely written with `for/list`.
+
+Contracts for these bindings?
+
+See `parameterize` comment at the top.
+
+Easy to fuse this loop with the `andmap`.
+
+Didn't we actually do this check above?
+
+What are the problems caused by this assumption?  It's unclear from this comment.
+
+Presumably we could create a test case for this with `syntax-local-introduce`, right?
+
+This case is very long with very few comments.
+
+Why is `deps` ignored here?
+
+This should be thought about for the paper.
+
+What does this function do?
+
+I think we're "increasing" sharing. :)
+
+Is this parameter a (potential) performance issue?
+
+Are we guaranteed never to need multiple levels of resolution here?
+
+We should have a shorthand constructor for this.
+
+Sure, here's an example:
+
+```
+-> (define-type R (U R Integer))
+; readline-input:3:13: Type Checker: Recursive types are not allowed directly
+;   inside their definition
+;   in: R
+; [,bt for context]
+```
+
+I can put that in a comment.
+
+No, that's fine. I'd prefer if we could do something involving the path, but that sounds too hard for now.
+
+Note that it's inside of a `for/lists`, so it's actually a list of lists of three elements.
+
+Isn't that what I said?
+
+Oh, well that's still a dictionary mapping the first element of the lists to the other two.
+
+Is `TypeAliasInfo` a two-list of syntax and args?
+
+So I never defined it anywhere, so trivially yes. I can add a data definition.
+
+Yes, this comment is outdated.
+
+The issue is that without the conservative approximation, there will be recursive references that are undetected (i.e., the recursion detection is unsound), which causes unexpected cycles, which causes potential infinite looping.
+
+Doing another pass over the type aliases might make the information more precise.
+
+I think that is a leftover parameter from an earlier version of this code that used different values for that argument. Since it's always used with the same value now, I'll just remove the parameter.
+
+The parameter is only checked by this code when the cache is grown, which means that as long as the cache is effective (i.e., there are more reads than writes) I would expect that it's not a huge cost.
+
+If more resolution is needed, it will happen in the next recursive call.
+
+(will do this afterwards in a separate commit since I may want to add other shorthand too)
+
+My bigger worry is that de-referencing (or setting) a parameter is slow, so we don't want to do that more than necessary.
+
+Right, but what programs are rejected (/other bad things happen) because the assumption is conservative?
+
+Right, I understand. What I was trying to say is that I expect that it won't be dereferenced that often, so we shouldn't have to pay the cost very often. Unfortunately I don't see a good way to do this without a parameter.
+
+None. The main downside is that the generated contracts may be less efficient or that more things will be redirected through the Name environment when they don't have to be.
+
+Ok, can you say that in the comment?
+
+Yes, will do.
+
+Let's keep using `type-equal?` explicitly here.
+
+Here too.
+
+What do you mean by "break this"?
+
+What do these error messages end up looking like?
+
+Should probably record in the signature that this function causes failure in addition to returning a boolean.
+
+I don't remember. I think I should just get rid of it.
+
+They should look exactly the same as before for the single argument case.
+
+```
+; Type Checker: type mismatch;
+;  mismatch in filter
+;   expected: (Bot | Top)
+;   given: (Top | Bot)
+;   in: here
+```
+
+I'm not sure how to show the multiple argument case. Currently it just shows the same thing with no regard for which argument it is.
+
+That is in the description. How would you put it in the signature?
+
+Can you add short explanation for these two functions. Perhaps `do-check` is hopeless, though.
+
+Can you make this description refer to the formals?
+
+Done. I think do-check is hopeless, but I think cleaning it up is not Herculean.
+
+I'm not sure what you mean. Formals to me mean bindings introduced by a `lambda` not `let`. And this is only useful for `let`, because with `lambda` you want to switch to the DeBrujin notation.
+
+Sorry, that was unclear. I mean the formals for `replace-names`. IOW, I think it replaces all the elements of `objects` in `res` with the corresponding `names`.  Or perhaps the other way around.
+
+Yeah, `do-check` is an abstraction too far. I once wrote an even-more-abstracted version of this file, but that was too much even for me and I didn't keep it.
+
+Its the other way around. I also now noticed that it described a previous implementation.
+
+I think this should probably be `tc-results-ts`.
+
+Did this test not work before?
+
+Nope. `(number? y)` had results `(ret Boolean (-FS (-filter Number #'y) (-not-filter Number #'y)))` but when it went through the let we turned `#'y` into `-empty-obj` and now we turn it into `#'x`.
+
+Sorry, I meant the one below this, with `g`.
+
+Ah, this would return filters with x still in it. The closing of the names was improperly implemented.
+
+This needs some comments; at a minimum a contract/purpose.
+
+Done.
+
+Why do we no longer need the form?
+
+Because it was only used to extract out the exprs which we are already passing in.
+
+Is this only about contracts? If so, then I wouldn't use units for that -- it'll just make everything worse.
+
+We could probably just use more files -- `Univ` and `Bottom` are both simple.
+
+square brackets. :)
+
+I'm not sure if more files are the solution. The definition of types depends on filters and filters depend on types. Less files would definitely solve it, i.e. combine type-rep and filter-rep, but I'm not sure how more splitting would help.
+
+What I mean is we could have a file that defines `Univ` and `Bottom`, which wouldn't need to depend on filters.  Then filters depend on that, and types depend on filters.
+
+I don't think this `take` is needed -- the iteration will just stop at the shorter sequence. 
+
+`Bottom?` depends on `Type/c` since it depends on the definition of `Union` and the filters depend on `Type/c` in addition to the other two. I'll change the comment to just say to find a non-lazy require solution instead of saying units.
+
+Shouldn't these comments stay (and go below your new tests)?
+
+Can you add a test like the above, but where the "actual" has `-true-filter`, and that's preserved by `no-filter` in the expected?
+
+Simplify how?
+
+What's the full error message printed here?
+
+In a later commit, I'm changing tc-results so that the pattern matches the whole list instead of the elements so that we don't run into the match bug. That will allow it to be split into two cases with the first being (tc-results: (list t) _ _ dty dbound)
+
+Ah, ok.
+
+Yep. This was from a bad merge.
+
+Done.
+
+``````
+pkgs/typed-racket-pkgs/typed-racket-test/tests/typed-racket/fail/internal-vector-error.rkt:12:12: Type Checker: type mismatch;
+ mismatch in number of values
+  expected: 2 values
+  given: 1 value
+  in: (vector 1 2)
+  context...:
+   /Users/endobson/proj/racket/plt/pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/typecheck/tc-toplevel.rkt:249:0: type-check
+   /Users/endobson/proj/racket/plt/pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/tc-setup.rkt:40:0: tc-setup
+   /Users/endobson/proj/racket/plt/pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/typed-racket.rkt:25:4
+   standard-module-name-resolver```
+``````
+
+Square brackets.
+
+`#%expression` is no longer needed here because of the `let`.
+
+I dislike this test -- it makes it seem like undefined is relevant.  Use `Bottom` instead.
+
+Isn't there a function equivalent to `apply -lst*`?
+
+I think this should be "`apply'" (note quotes)
+
+The fact that you're using `full-tail-ty` here instead of `tail-ty` looks like it's a semantic change.  Is that intentional, and do have an example where it's relevant?
+
+This was a confusing definition of `tail-ty` before, not a semantic change. If `dbound` was `#f`the `tail-ty` was equal to `full-tail-ty`, I just made it clearer that `tail-ty` is only the part in the `ListDots` if it exists.
+
+Let's just remove this entirely now.
+
+Can we avoid `apply` here?
+
+Is this a stylistic preference or a performance issue? If the first what is prefered?
+
+The latter.
+
+And replace it with what? There are still cases which call it from a place where there is a generated list.
+
+`for/fold` + specialization for a few arities.
+
+Sorry, I thought I was replying to the the other comment.  I'd use `apply` (I realize that's ironic with the other discussion).
+
+I think we have a constant for this.
+
+Some sort of comments on these functions would be nice.
+
+I think `AnyPoly:` might be a better name.
+
+Can we just do the extension in both cases (perhaps making it a no-op appropriately) and thus collapse this `if`?
+
+Or at least abstract the two duplicate `infer` calls ...
+
+I think this would be clearer as:
+
+```
+(define substitution
+  (cond ...))
+(and subsitution (do-ret (subst-all substitution range)))
+```
+
+Then we can get rid of the weirdness in the `cond` where the work happens in the condition.
+
+Also, why does this match non-poly types?
+
+It matches all the poly variables at the front of the type even if it is the empty set. Which is why I went with `All` vs `Any`, because `Any` has a small implication of inhabited.
+
+This is how it was and I haven't finished on the dotted case yet. It needs more improvements to inference to work better, but I hope it to be merged into the other case by removing the restriction that the dotted vars are null. So this will be fixed then.
+
+This is how it was, I just decreased the indent and github doesn't show it well. As above I hope to make this cleaner later.
+
+We do not as far as I can tell.
+
+Seems like we should.
+
+Done.
+
+Done.
+
+Nice. Ugly syntax, though ...
+
+Fixed.
+
+Does this just fall out from my changes to inference to make list/arrs the same?
+
+`(~datum *@)`
+
+Should this `~or` be a syntax class itself?
+
+`-Tuple` instead of `apply -lst*`
+
+This will give bad error messages because it will say expected lists instead of what the user actually thinks they are providing.
+
+Is this a type or a list?
+
+This seems very strange to me. Why cannot type be annotated with `Univ`?
+
+`-Tuple`
+
+Internal `define`
+
+`define` here too.
+Also, this case is so similar to the previous one that I think abstraction would be nice.
+
+Was this a bug?
+
+Where does this constraint generation happen now?
+
+Ah, I see now
+
+I think a bigger comment is needed here, explaining the strategy.
+
+No. This was flipped because sequences are covariant, but arguments to function types are contravariant.
+
+Why do we no longer care about these checks?
+
+Because we want to return something even if we cannot make it fully principled. The test case that was changed in this commit shows a case where inference was failing before but is now working.
+
+What's wrong with the substitiutions that will now be generated?  Ie, why aren't they fully-principled?
+
+Just the invariant case as we talked about before.
+
+I'm confused. `absent-entries` isn't about invariant cases at all.
+
+I thought you were refering to `demote/check-free`, since that was what github showed in the center of the comment. Absent-entries was dead code, the only time it could be triggered was that the hash mapped an index to a thing other than an `i-subst?` or similar, but that cannot happen because thats all the hash maps to.
+
+Ah, ok.
+
+Woo, down with units!
+
+Can you make this `define/inline`.
+
+Are events really covariant? cc: @takikawa
+
+I really wish this information was in `type-rep.rkt`, not least because it's duplicated in the variance information
+
+Yes, you can't write to an event. Concrete things that are events may be invariant, but you can't cast to those without a contract or going up to its Top type.
+
+But a lot of other things are events, like channels.
+
+And a lot of things are sequences (like vectors). Once you remove that type information there is no gaining it back, so covariance is safe.
+
+Yes, but once a channel is upcast to the event type you can't bring it back down (`channel?` goes to `ChannelTop`) so you still can't write to it. The `cast` form is a bit more problematic, but right now event contracts are disabled anyway because they're not sound yet, so it's fine. Once the contract is sound it'll be okay to `cast`.
+
+I think this needs a substantially larger comment explaining how it relates to `type-case`.
+
+I think the answer is that:
+- It doesn't recur into objects/paths/filters.
+- It only handles "simple" cases.
+- It passes along the variance to the recursive call.
+- It can return an arbitrary value -- but how do lists/pairs get combined?
+
+Is that right?
+
+Those are true currently, but I would like to fix some of those.
+- It doesn't recur into objects/paths/filters.
+
+Only because they are not simple.
+- It only handles "simple" cases.
+
+I want to fix this, and I think the solution is to not allow access to the not Rep fields, and uses the smart constructors.
+- It passes along the variance to the recursive call.
+
+Correct
+- It can return an arbitrary value -- but how do lists/pairs get combined?
+
+No, the current function can not return an arbitrary value it has to return a `Rep?` to be combined by the type constructor that was destructured. I plan on implementing more functions that would have different properties. For example one that recured over two Rep and only called the function when they had the same structure but didn't require the return type to be a rep. This can be used in infer and subtype.
+
+I agree with the current variance information should be in type-rep, but I plan on extending this with more information (like which smart constructors to use when recombining) and those cannot be in type rep. I eventually want to reduce the duplication between here and type-rep, but my first goal is to reduce the duplication across all the sites where this style of recursion is currently being done. Once that is done we will have a clear picture of the information that type-rep should contain.
+
+Ok, that makes sense.
+
+Ok, that makes sense.  Let's make sure all this info goes into the file.
+
+That makes sense -- I wasn't suggesting this should wait. Note that there are some hard choices about infinite loops etc with unions and folds etc.
+
+I don't think there are hard choices to be made here about inifinite loops because there will be no recursive handling here, the call sites will be responsible for the looping. This is important so that they can have special cases, but mostly it means punting on the problem.
+
+Made it begin-encourage-inline since that seems prefered.
+
+Added.
+
+Or `(listof Rep?)`, right?
+
+Also, are only `Type?` fields are supported, or would filters etc work?
+
+What I mean is that the obvious implementation of, for example, substitution loops for the union case.
+
+Yes (Listof Rep?) is also good. Filters would work but `And` and `Or` need smart constructors, same for the filters. So they are not supported yet.
+
+I don't believe that example, because substitute doesn't special case Union except in the case of unfolding. Yes there are special cases but that is the problem of the calling code, just like with type case. I hope to reduce those (with the variance stuff builtin) but I don't believe I am going to be able to make it fool proof.
+
+Fixed up listof comment and added that objects and filters are on the TODO.
+
+We could use the new syntax for predicates to indicate that if this produces `#t`, then the argument is a `Port`. @takikawa, what would the syntax be then?
+
+It should be `(-> Any Boolean : #:+ Port)`.
+
+I just tried putting that in tonight, but got this error:
+
+``` racket
+; Type Checker: Type (-> Any Boolean : #:+ Port) could not
+;   be converted to a contract: cannot generate contract for function type with
+;   filters or objects.
+;   in: (-> Any Boolean : #:+ Port)
+```
+
+So, I've left that part of the type spec for `ssl-port?` commented out in the subsequent commit.
+
+Ah right, that won't actually work with `require/typed`.
+
+You mean `symbol?`, I think.
+
+Now that this is written down, it does seem like generalizing the type in the dotted list to a result makes sense.
+
+Yep, fixed.
+
+I think so as well. I'll add it to my TODOs.
+
+Can we push this `if` into `check-subforms/with-handlers`?
+
+Yep, I had only gotten some of then to begin with. I want to eventually get passing the expected value everywhere.
+
+Done, but doing so uncovered a bug where we were not merging the filters of the handler results correctly with the body. I'll try and have that fix in tonight.
+
+Fixed now.
+
+Use `for/list` instead.
+
+Can you explain the new `t` argument? Also, can you add a comment connecting the change to the paper?
+
+Was this a bug?
+
+Will add comments.
+
+The t argument is the same argument as in subst-filter-set, but since the entry point has changed we need to change how the value is threaded down.
+
+Yep. I thought I had added a test case, but it seems I didn't, will do.
+
+I had added a test case. I added it when I fixed it with open-Values, which then became tc-results->values. And this merge fixed the behavior in subst-tc-results, but the values->tc-results test cases covers this.
+
+Let's declare this struct and use the constructor.
+
+This loop looks like it could be rewritten as two loops and then an `append`, which I think would be clearer.
+
+How so?
+
+Purpose.
+
+Why not also check the body, using some looser types?
+
+It does, `check-kw-arity` only returns `#f` if there are extra mandatory keywords since there're no types for those. It could also check them with `Any`, but that probably gives unhelpful errors.
+
+I think I already fixed that, will check. The guy who wrote that comment needs to go take Software Dev or something.
+
+Check them with `Bottom` instead, I would think. Or `Error`, perhaps.
+
+I'm not sure that refactoring makes sense here, since the end result is two lists. Doing the processing over the `(attribute mand.kw)` and `(attribute opt.kw)` separately doesn't really help because they contain the same kind of data.
+
+That is, both lists can contain both mandatory and optional keyword arguments. The name of the variables are referring to whether the positional arguments are mandatory or optional.
+
+Actually, looking at this more, can't we replace the whole pattern with `(~or k:kw-formal f:some-non-kw-formal) ...` and then write some much simpler code?
+
+Also, when you reconstruct the identical syntax object, use `this-syntax`.
+
+I don't think so, since mandatory positional formals need to precede the optional ones. If we branch on that in `some-non-kw-formal` then the ordering has to be checked after-the-fact.
+
+Won't that be checked by the underlying `lambda`?
+
+Hmm, yes, I think you're right. There may have been a reason I didn't do it that way but I can't remember. How about I investigate that in a separate PR? (partly because refactoring how `lambda` is parsed doesn't really belong in this commit) Or I could push an extra commit to this PR.
+
+Not sure what this comment is about, should it be moved somewhere else?
+
+Whoops, that was supposed to also move to `annotate-syntax.rkt`.
+
+Can't we just write this with `%`?
+
+I'm not sure what you imagine that has the right behavior. `%` returns `#f` if any argument is `#f`. We want to return a cset if either returns a valid cset even if the other fails.
+
+Ah right.
+
+Did this weakening actually break any programs? Or did you just take it out for simplification?
+
+Took it out because nothing called it anymore. Nothing called it anymore because it was only called by infer/dots which was no longer called because everything got simplified into cgen/seq.
+
+Why cannot this just have a not filter for both types and only have one case?
+
+hash, hasheq, and hasheqv should have the same type.
+
+By this do you mean that you chose this implementation over (-poly (a b c d) ((-HT a b) c d . -> . (-IHT (U a c) (U b d)))), or something else?
+
+Edit: or do you mean that it had filters that showed that the original was an immutable hash? Because that is possible.
+
+This is backwards incompatible.
+
+Whats stopping an implementation?
+
+What is the difference between IHashtableTop and (-IHT Univ Univ)?
+
+Why are generic sets using `equal?` not good enough?
+
+I think the original `hash/sc` and the new `mhash/sc` case will never trigger.
+
+I don't see how the error case could trigger. Shouldn't the contract catch this?
+
+This should be solved with a contract, not adding an error case.
+
+I accidentally wrote -top-filter instead of -top when writing the filterset for immutable? and spent a long time tracking it down. These errors helped.
+-Ian
+----- Original Message -----
+From: "Eric Dobson" notifications@github.com
+To: "plt/racket" racket@noreply.github.com
+Cc: "J. Ian Johnson" ianj@ccs.neu.edu
+Sent: Sunday, June 22, 2014 11:04:37 AM GMT -05:00 US/Canada Eastern
+Subject: Re: [racket] Split HashTable out into mutable and immutable kinds. (#682)
+
+In pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/typecheck/tc-subst.rkt: > @@ -54,7 +54,8 @@
+
+> ```
+>  [(tc-results: ts fs os)
+>   (ret (map st ts) (map sfs fs) (map so os))]
+>  [(tc-results: ts fs os dt db)
+> ```
+> -     (ret (map st ts) (map sfs fs) (map so os) (st dt) db)])) 
+
+I don't see how the error case could trigger. Shouldn't the contract catch this? 
+
+— 
+Reply to this email directly or view it on GitHub .
+
+Why cannot we just use `hash/c` and `#:immutable #t` or `#:immutable #f`?
+
+Why is the pairing function different from covering?
+
+Did the error not have a syntax location?
+
+The output types are different. If you want, I could make pair-equals more generic and have hash-types->static-contract and the printer use it for their purposes. Where should it live in that case?
+-Ian
+----- Original Message -----
+From: "Eric Dobson" notifications@github.com
+To: "plt/racket" racket@noreply.github.com
+Cc: "J. Ian Johnson" ianj@ccs.neu.edu
+Sent: Sunday, June 22, 2014 11:15:19 AM GMT -05:00 US/Canada Eastern
+Subject: Re: [racket] Split HashTable out into mutable and immutable kinds. (#682)
+
+In pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/types/printer.rkt: > @@ -470,7 +504,11 @@
+
+> ```
+>  [(Evt: r) `(Evtof ,(t->s r))]
+>  [(Union: elems)
+>   (define-values (covered remaining) (cover-union type ignored-names)) 
+> ```
+
+Why is the pairing function different from covering? 
+
+— 
+Reply to this email directly or view it on GitHub .
+
+I suppose nothing. I'll get rid of it.
+
+equal? doesn't use Rep-seq for comparison, so it's really slow. This is why @stamourv's set cover uses srfi/1 sets. I didn't touch his code, but it should probably use type-set instead of a srfi.
+
+Why do you think this? I don't check for any/sc when I do pair-equals.
+
+The location was in match. Not helpful.
+
+I'll add cond-contract to -and, -or and -imp for good measure.
+
+Didn't check to see if hash/c had that argument. Done.
+
+Right, I skipped that one when I rewrote for compatibility.
+
+What machinery is in place for a return value to immediately refine the type environment without an if test? I'd use it if it existed. Otherwise I'm not going to try to implement it.
+
+Because they need to protect both sides and it would be unsound to generate a contract that looked like that.
+
+Your environment is exposing the wrong location, likely you are using default command line racket. In DrRacket the location of the actual error is exposed, or you can have the commadline actually expose the error information embedded in the exception. Also contract errors should be caught by contracts and the contracts exist, you just need to enable them.
+
+In my .racketrc:
+
+```
+  (let ((old-error-display-handler (error-display-handler)))
+    (error-display-handler
+      (λ (str exn)
+        (when (exn:srclocs? exn)
+          (for ((srcloc ((exn:srclocs-accessor exn) exn)))
+            (displayln (source-location->string srcloc))))
+        (old-error-display-handler str exn))))
+```
+
+I don't think I understand the issue. 
+
+I would expect `cover-union` to return a bunch of types that cover different parts of the union. Why are hashtables not implemented as part of that? 
+
+If `equal?` is slow we should fix that not cover it up. For your change its fine though then.
+
+I recently implemented this, and it went out in the last release. If both returning a true value and a false value have the same filter, then sequencing like `begin` refines the type environment.
+
+This was originally implemented to support `(let ([x (read)]) (unless (number? x) (error 'bad)) (add1 x))`.
+
+I'm not following.
+
+cover-union finds named unions. This works for flat things like the numeric types, but for polymorphic containers, there is no single name for each instantiation.
+
+I'm claiming that this function will never be called with `(hash/sc any/sc any/sc)`. The reason is that  the arguments to `hash/sc` need to protect both values flowing both ways across the typed/untyped boundary. The only way for values flowing in to not need a check is if the type of the hashtable is `(HashTable Any Any)`, but in that case the values flowing out need to be checked with `any-wrap/c`. Thus the case cannot happen.
+
+You just took the existing case and did the correct solution assuming it was right. I'm taking a second look at the existing case and saying it is dead code.
+
+I agree that they implementation of finding different unions depends on how the union is structured, but shouldn't that be handled in cover-union. It changes the meaning of cover-union, but that is expected given that we have a new type of union that we want to print differently.
+
+Also, internal type checker errors should always be signaled with `int-err`.
+
+Don't call generalize here because IHashtables are not invariant and so it is unneeded.
+
+Why do we need the 3rd and 4th cases? It seems like they are specializations of the first two.
+
+Why cannot this be implemented as a default value for the return annotation? Otherwise you have to go through parsing again and have to deal with making sure all the bindings and locations end up right.
+
+Purpose statement, and document the argument types.
+
+Why does this take in a mutable-set and destructively mutate it? No current call site uses that.
+
+I had to add those so that marketplace and redex would typecheck. They were passing in the identity for the update function, which is universally quantified. The freeness of the type threw the inferencer off. If the inferencer improves, these cases won't be necessary.
+
+This describes 7 arguments but the function takes 6.
+
+I see your point. I'll do that.
+
+Can you construct a unit test for the inferencer showing this bad behavior?
+
+None of these functions take symbols yet you are passing a symbol to on-pair.
+
+Why do we need to add the require here?
+
+Oh right, the hash table was redundant with the on-(un)paired functions. Removed comment.
+
+Remove it and build marketplace to see. The linker complains.
+
+I don't buy that argument. This file is for require/typed it has nothing to do with contract generation. Maybe we need the require but why should it be here, I was able to trigger the problem no use of require/typed.
+
+I have no idea why it would be there. I just delta-debugged until it stopped yelling.
+
+```
+[infer-t (cl->*
+          (->* (list (-HT (-v a) (-v b)) (-v c) (-> (-v b) (-v d)))
+               (-IHT (Un (-v a) (-v c)) (Un (-v b) (-v d))) :
+               (-FS (-filter (-IHT (-v a) (-v b)) 0) (-filter (-IHT (-v a) (-v b)) 0)))
+          (->* (list (-HT (-v a) (-v b)) (-v c) (-> (-v b) (-v d)) (-> (-v d)))
+               (-IHT (Un (-v a) (-v c)) (Un (-v b) (-v d))) :
+               (-FS (-filter (-IHT (-v a) (-v b)) 0) (-filter (-IHT (-v a) (-v b)) 0)))
+;; Broken when commented.
+#;
+          (->* (list (-HT (-v a) (-v b)) (-v c) (-> (-v b) (-v b)))
+               (-IHT (Un (-v a) (-v c)) (-v b)) :
+               (-FS (-filter (-IHT (-v a) (-v b)) 0) (-filter (-IHT (-v a) (-v b)) 0))) 
+#;
+          (->* (list (-HT (-v a) (-v b)) (-v c) (-> (-v b) (-v b)) (-> (-v b)))
+               (-IHT (Un (-v a) (-v c)) (-v b)) :
+               (-FS (-filter (-IHT (-v a) (-v b)) 0) (-filter (-IHT (-v a) (-v b)) 0))))
+         (->* (list (-HT -Symbol Univ) -Symbol (-poly (a) (-> a a)) (-> Univ))
+              (-IHT -Symbol Univ) :
+              (-FS (-filter (-IHT (-v a) (-v b)) 0) (-filter (-IHT (-v a) (-v b)) 0)))
+         #:vars '(a b c d)]
+```
+
+This seems like a very complicated function for doing what you are trying to do. It also doesn't work in all cases.
+
+https://gist.github.com/shekari/5821908b19c233faae1f
+
+Oh, hmm. What governs what key a type gets?
+
+Edit: works fine when I turn the (? MHashtableTop?) pattern to just t.
+
+Remove unused import.
+
+The filters should just be the -*HashTop ones. The other ones are extraneous.
+
+The filters should not be on polymorphic types, just the Top part. These are correct here because the input is constained to meet the type but having it be minimal is less likely to cause errors if there is a refactoring later.
+
+Be consistent on using -IHashTop.
+
+Please remove.
+
+Why is this here? This file doesn't refer to these exports.
+
+Why here?
+
+Remove whitespace change.
+
+Remove whitespace change.
+
+Remove whitespace change.
+
+Is this needed?
+
+Indeed. Removed.
+
+True. Unnecessary. Removed.
+
+Why doesn't this work? It should just generate `async-channel?`. @takikawa, do regular channels behave the same way?
+
+This type annotation should be uneccessary.
+
+This one too.
+
+`let` instead of `let:` should work.
+
+Good catch, this should work. @stchang take a look at the `ChannelTop:` case in `type-contract.rkt` and also the `make-top-predicate.rkt` test in the integration tests.
+
+I wasn't sure if I needed to add something to `static-contracts` but I see what I left out now, thanks.
+
+There's a type error if the annotation is removed: 
+
+```
+Type Checker: type mismatch\n  expected: Log-Level\n  given: Any\n  in: log-level
+```
+
+This errors too.
+
+Can you add test cases for the dotted cases? I think that you are missing the dotted bound on the generatead type.
+
+I don't think this file should depend on the type constructors. I believe that is why there was an indirection through trans  so that that dependency is not here.
+
+Not that you shouldn't do it, but this is backwards incompatible change. If people were instantiating call/cc with two args, they no longer get the same type. Just make sure that you don't break anyone when submitting.
+
+Edit: Nevermind I was misreading the type.
+
+What indirection (and what "trans") do you mean here?
+
+I think he means the transform that param-annotated-name enabled. I got rid of it because its only purpose was for the variables in let/[ec]c. I can factor it back out if that suits you.
+
+Edit: done.
+
+No need for cons or quote here.
+
+Can you add the rest of `racket/format`?
+
+Do we need `#%plain-app` either?
+
+What binding are we importing for-template here and in tc-expr-unit.rkt? If this is still needed can you make it an only-in so that it is more obvious.
+
+Is this sound? Are we sure the contract system doesn't lift possibly bad code here?
+
+Remove till we have a test which uses this.
+
+Can you add a comment explaining why we cannot use gensyms for some but can for others? I assume we want gensyms on all but there are phasing issues or such.
+
+This function only takes two arguments. It looks like the boolean argument got dropped. I prefer define/cond-contract for this reason because then it is soon found out that the documentation is out of date.
+
+Edit just noted that this file is in the contract system, preventing such use.
+
+Is there a reason that this isn't `lifted-key`?
+
+I forgot to update it in a renaming. Will fix.
+
+This was just for debugging, because gensymed syntax property names can't be accessed via reflection. Will fix.
+
+This should only be ignoring a lifted expression that computes the actual function (e.g., by first partially applying it to the negative blame party) so it should be ok.
+
+It's adjusting the phase downward for the syntax property accessors since they're at phase 1 in `racket/contract/private/provide` and it's needed at phase 0. I'll add an `only-in` and a comment.
+
+Ah, I was wondering about that. Should have asked; thanks.
+
+Robby
+
+On Tue, Jun 24, 2014 at 11:57 PM, Asumu Takikawa notifications@github.com
+wrote:
+
+> In racket/collects/racket/contract/private/provide.rkt:
+> 
+> > @@ -55,9 +58,37 @@
+> >      make-))
+> > 
+> > ##  (begin-for-syntax
+> > 
+> > ## \-  (struct provide/contract-info (contract-id original-id))
+> > 
+> > +
+> > -  ;; rename-id : identifier? : the name the lifted expression is bound to
+> > -  ;; contract-id : identifier? : the name of the contract expression
+> > -  ;; original-id : identifier? : the identifier being contracted
+> > -  (struct provide/contract-info (rename-id contract-id original-id))
+> >   +
+> > -  ;; keys for syntax property used below
+> > -  (define rename-id-key 'rename #;(gensym 'contract:rename-id))
+> 
+> This was just for debugging, because gensymed syntax property names can't
+> be accessed via reflection. Will fix.
+> 
+> —
+> Reply to this email directly or view it on GitHub
+> https://github.com/plt/racket/pull/516/files#r14169109.
+
+Do we want to add a unit test form that does capture-lifts?
+
+I think this case can be combined with the `(? Struct?)` case above.
+
+Couldn't this function be written more simply as something like:
+
+```
+(cond [(implies? extra-filter f) -top]
+          [(contradictory? extra-filter f) -bot]
+          [else f])
+```
+
+But I suppose this formulation saves some work, so it's probably not worth changing. Maybe including the simpler implementation in a comment would be useful.
+
+No. Because we don't have an `implies?` function we just have `atomic-implies?`. The real issue is that with complicated propositions all the simplification logic is in `-and`.
+
+Use `in-value` and `#:when` instead of the extra `filter`.
+
+I'm confused about how this actually accomplishes the goal. We seem to keep `thn` even when `takes-true` is `#f`, and to produce the full `if` expression if `(and (not takes-true) (not takes-false))`. But if your tests pass, it works, so I'm confused.
+
+In the case where only one branch is taken, we leave the dead code elimination to the compiler. We just don't optimize the branch not taken. 
+
+If neither branch is taken, we don't give the compiler any dead code elimination hints but we don't optimize either branch (which is where the bug was). I would like there to be dead code elimination in this case but I'm not sure a clean way to get it to work while working with check syntax. The best I came up with is
+
+```
+(begin0 tst.opt
+  (lambda () thn els))
+```
+
+How about `(begin (when #f thn els) tst.opt)`
+
+Or perhaps simpler: `(if #t tst.opt (begin thn els))`.
+
+Much better, should do this programming thing when I'm more awake.
+
+These need purpose statements (or at least explanations).
+
+Done.
+
+Can you move this to a file that is named in such a way that we can put other contracts that we need to implement in it. @ianj needed something similar for hash tables.
+
+Confirming that these are just white space changes. Right?
+
+I'm confused by what you want -- it's in a separate file. Or do you think we should have one file that contains `any-wrap/c` and this?
+
+Yes.
+
+I would just do `(simple-contract-restrict 'chaperone)` if you are just going to ignore the struct types.
+
+Why cannot I export an unknown struct type for a unknown type and fail at later operations? Isn't that what `struct-type/sc` does currently?
+
+Either one file or a seperate directory from utils depending on how large we think it will be. Otherwise utils has become the dumping ground for tons of unrelated parts of the code.
+
+Good point. This implies that we can do better for `VectorTop` etc as well.
+
+I'm not sure whats standard, but usually I try to end files with newlines.
+
+Can you add comments about what `struct-type/c` is designed to protect and how the current implementation actually works.
+
+I'm not sure why this is not just a structural combinator. Is it because you will need to examine the struct-type contract eventually?
+
+This is unsound. When importing an untyped struct-type that is used reflectively from typed code this will blame the typed module, but have an error message saying that the `struct-type was used reflectively in untyped code`.
+
+Also it is not obvious to me that importing a struct-type with no higher order protection is sound. Is this relying on the fact that we cannot do anything in a typesafe way to a value of `StructTypeTop`?
+
+Yes, just as with `VectorTop`.
+
+Right, it isn't purely structural because the reflective interface is going to actually need info from the structure type.
+
+Doesn't this require `(listof static-contract?)` as input? I might also change it like the other structural contracts so that it only takes one contract in instead of list.
+
+Well, the "purpose statement" for `utils` is "things of general use outside of TR", which I think this belongs in. I'm inclined to do that refactoring later.
+
+I think the right thing here is to generate a compile-time error when the StructType is supposed to be from untyped code. Is there an easy way to express that with static contracts?
+
+There are two ways.
+1. If there is no way to generate a valid contract you can fail to generate the static-contract in type->contract.
+https://github.com/plt/racket/blob/master/pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/private/type-contract.rkt#L537
+2: If there is a way to generate a valid contract, but after optimizing we haven't reached that point, you can fail to translate the static contract to a contract.
+https://github.com/plt/racket/blob/master/pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/static-contracts/instantiate.rkt#L33
+
+I think in this case option 1 is better.
+
+It has to take a list because that's how the `combinator` struct expects `args` to be.
+
+Use `in-indexed` here and below.
+
+There should be a match expander that abstracts this.
+
+Should this produce `Univ`, not bottom, if the predicate isn't actually a predicate?
+
+Can we do better than `#'here`?
+
+Why is this `(Un)` -- the handler might return anything at all.
+
+Can you add a test where `void` is used as the predicate?
+
+If the predicate isn't a predicate, TR won't let it run so I don't think it actually matters (and `Univ` would widen the overall result unnecessarily I think?).
+
+Potentially, but this should never error so it shouldn't matter.
+
+Because this case will error and won't run (handler has the wrong arity, for example).
+
+Ah, then this is too restrictive -- you should just run the handler with type `Univ` as the input. See my later comment about `void`.
+
+`void` is a subtype of `(-> Any Any)` though so it should be fine.
+
+Ah, ok, I think I understand now.
+
+I think there's a maybe-overly-strong assumption that the `check-below` call right above this will always error. Either add something that ensures that, or make this return something else.
+
+Why provide this here?
+
+Well, otherwise I would have to either require parse-helper.rkt in match.rkt or put syntax-local-match-introduce in a separate module and require that in match.rkt and parse-helper.rkt.  
+
+Ok I got rid of that and put syntax-local-match-introduce in its own module.  Considering the problem there was with unstable/2d/match, it's probably better that way.  
+https://github.com/AlexKnauth/racket/commit/4ae3e481b134df30e7984ce17ac947ba43bdc4bc
+
+Should this have a case for `single-flonum?` also?
+
+The problem is that there is no SCHEME_LOCAL_TYPE_SINGLE_FLONUM. I think that single flonums are always boxed, so they don't have their own local type.
+
+and here about generalize
+
+This will error bizarrely on `(define ((f x) y) (+ x y))`.
+
+Is there really supposed to be `name` in the input syntax?
+
+Yeah: http://www.scheme.com/csug8/debug.html#./debug:s0
+
+Oh right; I forgot Racket has fancy curry syntax.
+
+You probably want to use `normalize-definition` if you want to handle everything, or just check that it's an identifier if not.
+
+You could use `syntax-local-infer-name` instead.
+
+@stamourv Instead of passing a name to lambda?
+
+Yes.
+
+Need to handle the case when no name is provided and `syntax-local-infer-name` fails. I think we should just error then.
+
+I think examples are better than these pseudo-rewrite rules.
+
+Is there any way to connect things like `-Stx-Listof` and `Stx-Listof` to each other so that the type-checker knows they're the same thing?  
+Because right now, the printed types for `stx->list` etc. have `(Rec lst (U Stx-Null (Pairof a lst) (Syntaxof (Pairof a lst))))` instead of `(Stx-Listof a)`.  Is there any way to fix that?
+
+What does this comment mean?
+
+Shouldn't this use the binding?
+
+@rfindler Is there a reason not to make the expansion/check-syntax communication a prefab struct instead of a vector?
+
+This is what the `list*` function is for.
+
+We really need a `for/reduce`
+
+No, not really. Vectors are more convenient in this case because the syntax
+property key is bringing what the prefab would bring.
+
+On Mon, Oct 6, 2014 at 8:32 AM, Sam Tobin-Hochstadt <
+notifications@github.com> wrote:
+
+> In
+> pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/types/type-table.rkt:
+> 
+> > -              (pretty-format-type (cleanup-type type)))]
+> > -        [(tc-results: types)
+> > -         (apply string-append
+> > -                (for/list ([(type index) (in-indexed (in-list types))])
+> > -                  (format "Value ~a:~n  ~a~n"
+> > -                          (add1 index)
+> > -                          (pretty-format-type (cleanup-type type)
+> > -                                              #:indent 2))))]
+> > -        [(tc-any-results: _) "AnyValues"]))
+> > -    (cond [(not printed-types) tooltips]
+> > -          [(or (not (pair? (syntax-e stx)))
+> > -               ;; special-case quote because there's no worry of overlap
+> > -               ;; in a (quote ...) and because literals expand out to a
+> > -               ;; use of quote.
+> > -               (eq? (syntax-e (car (syntax-e stx))) 'quote))
+> > -           (cons (vector (syntax-source stx)
+> 
+> @rfindler https://github.com/rfindler Is there a reason not to make the
+> expansion/check-syntax communication a prefab struct instead of a vector?
+> 
+> —
+> Reply to this email directly or view it on GitHub
+> https://github.com/plt/racket/pull/787/files#r18456205.
+
+When the syntax object doesn't have a source location then you don't want
+to register it's types.
+
+I also think you should check the other fields (span and position). In
+general it is not guaranteed that a non-#f source field implies non-#f span
+and position fields. (Altho it won't happen unless you have a misbehaved
+macro (I think).)
+
+Robby
+
+On Mon, Oct 6, 2014 at 8:31 AM, Sam Tobin-Hochstadt <
+notifications@github.com> wrote:
+
+> In
+> pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/types/type-table.rkt:
+> 
+> > @@ -62,6 +65,53 @@
+> >                                          (syntax-line e)
+> >                                          (syntax-column e))))))
+> > 
+> > +;; Convert the contents of the type table to a format that check-syntax
+> > +;; can understand in order to draw type tooltips
+> > +(define (type-table->tooltips)
+> > -  (for/fold ([tooltips '()])
+> > -            ([(stx results) (in-hash table)]
+> > -             #:when (syntax-source stx))
+> > -    ;; #f if we should just skip this results
+> 
+> What does this comment mean?
+> 
+> —
+> Reply to this email directly or view it on GitHub
+> https://github.com/plt/racket/pull/787/files#r18456115.
+
+I guess my thought was that any fixed-length vector would be better expressed as a prefab, not that we should add extra info in the type of the prefab.
+
+I don't mind if you change this one, but don't change others because they
+have been in releases already.
+
+Robby
+
+On Mon, Oct 6, 2014 at 8:57 AM, Sam Tobin-Hochstadt <
+notifications@github.com> wrote:
+
+> In
+> pkgs/typed-racket-pkgs/typed-racket-lib/typed-racket/types/type-table.rkt:
+> 
+> > -              (pretty-format-type (cleanup-type type)))]
+> > -        [(tc-results: types)
+> > -         (apply string-append
+> > -                (for/list ([(type index) (in-indexed (in-list types))])
+> > -                  (format "Value ~a:~n  ~a~n"
+> > -                          (add1 index)
+> > -                          (pretty-format-type (cleanup-type type)
+> > -                                              #:indent 2))))]
+> > -        [(tc-any-results: _) "AnyValues"]))
+> > -    (cond [(not printed-types) tooltips]
+> > -          [(or (not (pair? (syntax-e stx)))
+> > -               ;; special-case quote because there's no worry of overlap
+> > -               ;; in a (quote ...) and because literals expand out to a
+> > -               ;; use of quote.
+> > -               (eq? (syntax-e (car (syntax-e stx))) 'quote))
+> > -           (cons (vector (syntax-source stx)
+> 
+> I guess my thought was that any fixed-length vector would be better
+> expressed as a prefab, not that we should add extra info in the type of the
+> prefab.
+> 
+> —
+> Reply to this email directly or view it on GitHub
+> https://github.com/plt/racket/pull/787/files#r18457558.
+
+What does the return value of this denote?
+
+If it's truthy, it's the result/type and no type error. If it's `#f`, there was a type error somewhere.
+
+Then it should have a stronger contract, probably `(or/c Type/c #f)` for `check/t?` and `(or/c full-tc-results/c #f)` for `/check?`.
+
+What contracts are they bound to? And whose runtime?
+
+[]
+
+Can we lookup at contract generation time if an alias is recursive? I'm wondering if would be cleaner to just do the check there instead of having another table of state that needs to be in sync/correct.
+
+Can you change this to `(? Name?)`? There have been a bunch of changes to `Name:` that have required changing all uses so it seems like we should reduce those uses unless it is needed.
+
+This seems wrong. Wanting a flat contract is different from wanting a predicate.
+
+Shouldn't change-provide-fixups and change-contract-fixups have the same signature in either both expect the caller to call `flatten-all-begins` or both do it internally? I would vote for the caller doing it. 
+
+Add a purpose statement here.
+
+This loop is very confusing to me.
+- Why do we need to do it for different kinds?
+- Why does running it twice make things into failure syntaxes?
+- Why is there a dictionary that is global state that is not monotone?
+
+Use `kernel-literals` instead of `#:literals`, it avoids some phasing issues.
+
+literal-sets instead of literals.
+
+There seems to be places that you updated to have a new `_` instead of using these matchers.
+
+While that's true in the abstract, this property is only ever used to generate predicates.
+
+Use this instead of adding extra `#f` in tc-structs and tc-toplevel.
+
+Yes, I think that makes sense. Will fix.
+
+- It's run for different kinds to see what's the most specific kind it can generate and keeps that one. Since we don't have a static contract for this later, we need to record what kinds it can be used at since we can't compute it later.
+- Because of mutual recursion it's necessary to do two passes. In the first, contracts that fail to generate (modulo references to other aliases in the cycle) will be registered as failing. In the second round, any contracts that _refer_ to those failing contracts should also fail. Now that I think about it though, I wonder if it needs to do this more than twice to reach a fixed point in general.
+- I'm not sure what you mean about the dictionary.
+
+(Sorry, pretty late reply) We only find out if the alias is recursive in the pass done in the helper file. It's hard to reconstruct this information later without this table.
+
+(sorry late response)
+
+The problem is that `Stx-Listof` is really a type constructor, and TR can't currently reconstruct the original type from a type constructor application. It would be nice if this were possible.
+
+what do you mean?
+
+For a type alias like `(define-type Foo SomeType)`, TR can usually recover the right type alias name when printing the type `Foo` (internally this is stored just as `SomeType`---it really is just an alias---and we look up what aliases map to that type). 
+
+For something like `(define-type (Foo X) (U X (Bar X)))`, the `Foo` is a type constructor that can be instantiated for many types, like `(Foo Integer)` or `(Foo String)`. TR also represents these by expanding the type application (so `(U Integer (Bar Integer))` for example) but can't easily recover the original form `(Foo Integer)` when printing the type.
+
+So that's why your type didn't print as `(Stx-Listof a)`. The right solution for this in the long term is probably to represent type constructors like `Stx-Listof` not as universal types (i.e., don't represent `Foo` as `(All (X) (U X (Bar X)))`) but as real type constructors that are a separate kind of object than ordinary types.
+
+Ok that makes sense.
+
+Is it possible to use `for/list` here or is that a bad idea?
+
+Minor: indentation seems a bit funny here?
+
+Yes that would be better. I think just `dict-keys` would be even simpler.
+
+The default indentation of `for/fold` always seemed weird so this was me trying to change it. Maybe the style guide should say something?
+
+I believe I fixed that bug. Are you using the latest drracket?
+
+I wasn't but I am now. Thanks!
+
+(Took me long enough to fix that one.....! sigh; I only did it after being shamed into it at RacketCon. One good thing that comes out of shame, eh?)
+
+I think this should be racket/base to encourage people to be good citizens.
+
+Shouldn't this be <<name>> or whatever the collect was?
+
+"Package" would be better than "Project" IMHO
+
+Perhaps, "populate a new directory with the stubs of a package"
+
+I have no preference.
+
+Question: I want to know why use racket/base rather than racket? I know it imports less stuff, but why is it bad?
+
+The style guide explains this:
+
+http://docs.racket-lang.org/style/Language_and_Performance.html
+
+In particular, the first few paragraphs.
+
+Oh, I guess that makes sense. Sure. I'd be happy to change that if no one else minds.
+
+Yup, fixed.
+
+Fixed.
+
+I'd be okay with that.
+
+I was hoping that we would make this work as well with some option during the linking process, because I often create a git repo, link it, start writing it, then upload it to github later. In this model, I would have to uninstall my old link and reinstall with the new github source I made. I think that --clone/--link could work together
+
+It looks like from below the idea is to go back and do an update and it will leave the existing dir/clone in place. That's fine.
+
+Right: you can use `raco pkg update --clone ...` to promote an existing Git checkout from a directory link to a repository link.
+
+I believe you meant to make that pkgs.rktd
+
+I know I told you to put that, but I believe it is actually trunk/racket/share/pkgs/
+
+This command line is ignoring the source. I think you want ("-n" name source). 
+
+It seems like we want "--skip-installed" as well, in case the deps make them appear in a non-topologically sorted order.
+
+ Also, you want "search-auto", not "auto", although I speculate that you put in the source stuff because you were worried about what got installed; if that's the case we could make this "fail" and then enforce the package list to be maintained (or generated) in topo-sort order.
+
+It's possible that for/sum doesn't exist in the version that's running DrDr, but it's worth finding out and maybe upgrading.
+
+`for/sum` turns out to exist there.
+
+Can you use a `@tech` reference for impersonator properties? I'm not sure what the right name is, though.
+
+Why use `define-struct` and not `struct`?
+
+@samth ...because the code I copied this from used it and I forgot to update it. I'll change it, thanks.
+
+Why the extra `lambda` here?
+
+This is still checking the same thing it was before.
+
+I don't think you should call 'contract' here. Just call directly into the projection (or a helper function the projection also uses)
+
+Use blame-add-context (or one of its variants) here. 
+
+To get a sense of what to put, do something like (list/c (stream/c (box/c none/c))) and look at the error message. You should seem some context messages there. (Let me know if that's not enough of a hint.)
+
+Oh I see you're already using it above. 
+
+(the reason not to call contract is you want to use the same blame record, not make a new one)
+
+@rfindler Unless I'm missing something about how contracts work, I think that attaching a new contract is necessary, since streams are lazy, and different elements of the stream are fundamentally different objects.
+
+Because of that, contracts need to be assigned both _lazily_ and deeply. Therefore, `(stream-rest s)` needs to have a new contract attached to it so that further calls to `stream-rest` on the same stream still include the contract.
+
+Yes that is true. But you don't call "contract". You have some contract and
+you get its projection and call that.
+
+should this be 6.1.1.9?
+
+There's an abstraction for this last clause somewhere in the reference.
+
+Couldn't this live in `module+ test` instead of being commented?
+
+@samth See the comment I left in the main PR discussion.
+
+There's a duplicate "prevent" here. You should probably just delete "will prevent this". Also maybe this should refer to the `make-rename-transformer` docs since the `'not-free-identifier=?` feature isn't specific to this property. It's a general rename transformer issue that just happens to be relevant to the example.
+
+s/renaming//
+
+Sentence is convoluted. Try a more direct version: Setting the ... property prevents this, which is useful for ..., for example.
+
+This example is pretty complicated. Do you have anything simpler? Also, whichever example goes there should probably test `free-identifier=?`, IMO.
+
+I like the idea of linking to `make-rename-transformer`, in fact, we might be able to do it without an example.
+
+Would it make sense to bail out early when `(struct? s)`. Otherwise, sequence structs (which I'd expect to be a common case) will have to go through all these tests before falling back to the general method. For short sequences, that may matter.
+
+But `(struct? s)` will be #f for most of those, since the structs will be opaque, won't they?
+
+Bleh. You're right.
+/me shakes fist at opaque structs.
+
+s/with//
+
+Maybe a like to WP or a quick explanation of "combination"? It's a heavily overloaded term, so it may not be clear with meaning you're using. I guess if you put these docs after `permutations`, that may be clear from context?
+
+Nitpick: I'd document it as two separate arities, as opposed to using an optional argument. The function really has two separate modes.
+
+Related to the arities comment above. I'd just say `exact-nonnegative-integer?` here. There's no point in ever passing `#f` explicitly.
+
+Internal defines?
+
+Wouldn't the code be simpler if you used integers and bitwise ops?
+
+`for/fold`?
+
+`for/fold`?
+
+Just noticed, reading this email trail that `shuffle` has only one call in
+the examples? How about duplicating that call so people see it returns
+different results each time?
+
+Is there a better way to make a blame object?
+
+What's the easiest way to add examples? Create a namespace with `racket/port` and call `with-input-from-string`?
+
+This should specify what happens if the `body` expressions produce more than one value, or if they raise an exception.
+
+This use of `unsafe` is not needed.
+
+Ok done.
+
+Fixed now. I had used unsafe because the [similar code](https://github.com/AlexKnauth/racket/blob/e08188aeda8c419b741313ef34ef0e49ac6eb6a4/racket/collects/racket/private/promise.rkt#L83) in `private/promise.rkt` used unsafe. Should I change that too?
+
+Can you make it more specific about what exception is raised in each case, the way the rest of the docs do?
+
+@samth Is this better?
+
+(In reply to https://github.com/racket/racket/pull/1182#discussion_r48572440)
+
+(In reply to the first bit of https://github.com/racket/racket/pull/1182#issuecomment-168975715)
+@elibarzilay I'm not sure how any common code could be abstracted out. Is this the kind of thing you meant? Or is there any way you can see to abstract anything out?
+
+I don't think you need that anymore.
+
+[The comment above](https://github.com/racket/racket/pull/1243/files#diff-69b1d68b3a51a4a74ecf364822d21099L165) claims this regexp matches some RFC — shouldn't that comment be updated?
+
+This reads like `(ipv6-host-regexp)?(host-regexp)?`, so allows both to be present and, below, discards the host using the IPv6 host instead. Don't we rather want to use alternation, as in `((ipv6-regexp)|(host-regexp))?` (allowing either one, or nothing since the host is optional, but not both)?
+
+The [PR with tests](https://github.com/racket/net/pull/8/files) lacks negative tests against this.
+
+I've actually found the pointed-to appendix (https://tools.ietf.org/html/rfc3986#appendix-B), and learned that it does support IPv6. In fact, that regexp uses `([^/?#]*)` for the host part; the custom adaption here `([^/?#:]*)` breaks that support by excluding `:`.
+
+Does `mode` take on values from the `#define`s below (such as `SCHEME_VAR_MODE_LETREC_CHECK`)? If so, maybe a pointer there would be a good addition to this comment, but I'm confused about why there are more than 3 of those modes, since there are 3 cases in the union.
+
+I'll extend the comment. Some modes (NONE and COMPILE) don't currently need extra fields.
+
+Should this `/` be `quotient` to ensure the same behavior as that Wikipedia code?
+
+Oops, looks like the chaperone check above was not needed. But with your changes it's needed again.
+
+Another typo in my code (if you would be so kind to fix), the calls to `chaperone_hash_key` in `unsafe_scheme_hash_tree_` fns should use name `"unsafe-immutable-hash-iterate-"` instead of `"unsafe-weak-"`.
+
+Maybe define `#define`s for these constants?
+
+And a separate function to compute the subtree?
+
+Is it possible to use `(rename-out [match-lambda match-λ])` etc here? That would be simpler than using `define-syntaxes`
+
+Yes. Quite.
+On Apr 5, 2016 22:16, "Benjamin Greenman" notifications@github.com wrote:
+
+> In racket/collects/racket/match/define-forms.rkt
+> https://github.com/racket/racket/pull/1301#discussion_r58643203:
+> 
+> > @@ -16,8 +16,9 @@
+> >  (provide define-forms)
+> > 
+> >  (define-syntax-rule (define-forms parse-id
+> > -                      match match\* match-lambda match-lambda*
+> > -             match-lambda*\* match-let match-let*
+> > -                      match match\* match-lambda match-λ
+> 
+> Is it possible to use (rename-out match-lambda match-λ) etc here? That
+> would be simpler than using define-syntaxes
+> 
+> —
+> You are receiving this because you authored the thread.
+> Reply to this email directly or view it on GitHub
+> https://github.com/racket/racket/pull/1301/files/5162a876a38423b03e47c8a557e0cd7ca5a53ddb#r58643203
+
+Nitpick: Your changes dropped the `XXX`. Is that a keyword that someone may grep for?
+
+I think Jay uses that?​
+
+Can you keep this line-wrapped?
+
+I think it's inaccurate to say that it's a "new scope". What's flipped are two existing scopes.
+
+I think we should be more specific about what happens than "unpredictable".
+
+I was adapting your comment that "`(syntax-local-introduce stx)` adds a single scope, using the equivalent of `'flip` mode."
+
+Right, but that scope isn't "new" -- it's `the
+ macro-introduction scope and the use-site scope, if any`, as the old docs say.
+
+The whole premise of this pull request is that I don't understand what this function does. We can therefore agree that I'm unqualified to document it ;)
+
+How about "Here, we use `(datum->syntax #f id)` to produce an identifier with no scopes."? 
+
+Should you clarify that it needs to have no scopes because then `syntax-local-introduce` will start with a clean slate and add exactly the scopes needed to make the unhygienic binding work? 
+
+OK.
+
+This makes it look like there's an asymmetry between `body-expr`s and `stx-expr`, but the prose seem to consider them indistinguishable. Any reason not to have one name and `...+`? Same with the `#:contracts` below.
+
+There _is_ a difference, though: the `body-expr`s can evaluate to anything, but the `stx-expr` must evaluate to a syntax object. I can clarify the prose a little bit more to make that clear, though (the last bit should probably read “Adds the caught identifiers to the `'disappeared-uses` syntax property of the syntax object produced by `stx-expr`.”).
+
+This is missing a `str` argument.
+
+Thanks, fixed now.
+
+typo on this line
+
+Last time I tried, `procedure-rename` was slower than writing a let and a wrapper lambda.
+
+Struct accessors are treated specially, so there's no extra wrapper at run time.
+
+`printf` already handles format strings, so this could be `(printf "~a" (or c-paren-shape #\( ))`.
+
+Shouldn't this be `andmap` ?
+
+Erm yes, good point. Clearly my tests aren't good enough.
+
+Couldn't this use the test that I suggested: `(collection-file-path "main.rkt" "xrepl" #:fail (lambda _ #f))`?
+
+Yes. although FWIW, this didn't seem any better than your other suggestion, and so I went with that one. I don't really have much of a preference and would be happy to change it if you feel strongly one way or the other.
+
+The major difference is that your version will swallow other errors, such as not having readline or editline available.
+
+That it will, is that a problem though?
+
+Depends what you want the behavior to be.
+
+Fair. Well also iirc, xrepl actually swallows up the error itself if libedit or libreadline are not installed, and works normally, just without readline support.
+
+Either way though, this doesn't really matter, so I'll just change it to the other way (the second one you suggested in slack using `collection-file-path` and call it good.
+
+Should this skip tab characters as well?
+
+Probably, but `' '` is hardcoded elsewhere in the same routine and I don't want to get into heavily refactoring it. That can be a separate issue.
+
+"path" should be "module path"
+
+Technically, I think these should be `@racket['racket/interactive]` and `@racket['racket/gui/interactive]`, since they're symbols that are used as module paths.
+
+Needs a terminating period in the `@elem{}`
+
+Was this to avoid problems on Windows? I think `scheme_make_false()` is the right choice.
+
+Okay done
+
+okay done.
+
+Yes it was, outside of the technical difference the docs give, I still don't have a good intuition when to use 0 or #f. Anyway, `scheme_make_false()` works. Do you know why the literal `scheme_false` doesn't work on windows?
+
+Woops, thanks.
+
+Can this little recipe be a function?
+
+Please use `match-define` to reduce indentation
+
+I don't like this change. I don't like `apply` being used unless necessary and I don't like debugging code getting in the way of understanding and performance of normal code. Perhaps you could instead use a debugging definition of `to` that forks the output to two ports.
+
+Is this the appropriate place for this error?
+
+I see your point re `apply` and debugging, but _I_ don't like seeing `(fprintf to ...)` repeatedly. It smacks of not “do not repeat yourself”. Can I keep `(define printto (curry fprintf to))` ?
+
+The `http-conn` hasn't thrown an error. I can't move to the next part of the function, since I'm not talking to the target host. I need to abort. Either throw this `(error ...)` or keep the whole thing in an escape continuation. Also, if the caller were to chose not to use `http-conn-CONNECT-tunnel`, and used `tcp-connect` instead; they would get an error thrown on failure.
+
+Would you suggest a better way to handle this error?
+
+I assume you're saying "change `match-let` to `match-define`" rather than change the whole `cond` into a `match` -- which would also work, but I think would lose some meaning.
+
+`curry` is very slow too :/
+
+I guess I just don't understand. Won't `ports->...ssl-ports` throw the error later? It seems like asking to much of the clients of `ports->...ssl-ports` to know that OS X doesn't support it and I suspect that when it does we will forget about this and will refuse to try even when it works.
+
+Correct, I like `cond` here
+
+never mind ... we're not including `racket/function`. I don't want to require anything new. I'll put it back how I found it.
+(update: immediately after writing this, I required `racket/tcp` --- oh well!)
+
+Pulled up into `url.rkt` as `tcp-or-tunnel-connect`
+Can't go in `http-client.rkt` because it needs access to `proxy-server-for`
+Shan't put it in `git-checkout.rkt` because it's too general for that
+
+Oh I see... I thought you were taking about the "HTTP CONNECT failed" error,
+which is bang in the middle of the extract above. No... you're taking about the
+`osx-old-openssl?`, innit?
+
+I'll remove the `cond` clause; I think I misread what `osx-old-openssl?` does
+for us. And we'll let them run against an error in the openssl libraries.
+(Which, from my experience, will be utterly incomprehensible)
+
+As a matter of interest, does the compiler not handle curry well?
+
+Tim
+
+On 09/08/2016 14:59, Jay McCarthy wrote:
+
+> In racket/collects/net/http-client.rkt
+> https://github.com/racket/racket/pull/1411#discussion_r74062556:
+> 
+> > @@ -121,34 +129,37 @@
+> >                           #:headers [headers-bs empty]
+> >                           #:content-decode [decodes '(gzip)]
+> >                           #:data [data #f])
+> > -  (define (print-to fmt . args)
+> > -    ;; (eprintf "print-to: ~a~%" (apply format fmt args))
+> > -    (apply fprintf to fmt args))
+> 
+> |curry| is very slow too :/
+> 
+> —
+> You are receiving this because you authored the thread.
+> Reply to this email directly, view it on GitHub
+> https://github.com/racket/racket/pull/1411/files/a5583485b67cff28edef92607574f1f9288b836c#r74062556,
+> or mute the thread
+> https://github.com/notifications/unsubscribe-auth/ABDkIa87_vPdqY8ZnlmSaaff8PKuMJJZks5qeIemgaJpZM4Jf_v6.
+
+## 
+
+Tim Brown - tim@timb.net - +44(0)7771714159
+
+Okay, glad you thought about it
+
+Maybe there's a way to improve it?
+
+Variable arguments and `apply` cause a lot of allocation and uncertainty. A macro version wouldn't have this problem if you wanted to do it that way.
+
+LOL!
+Improve SSL/OpenSSL error reporting!
+Nice one!
+
+I've rolled this back to its original, expanded version
+
+On 09/08/2016 15:45, Jay McCarthy wrote:
+
+> In racket/collects/net/http-client.rkt
+> https://github.com/racket/racket/pull/1411#discussion_r74072424:
+> 
+> > @@ -121,34 +129,37 @@
+> >                           #:headers [headers-bs empty]
+> >                           #:content-decode [decodes '(gzip)]
+> >                           #:data [data #f])
+> > -  (define (print-to fmt . args)
+> > -    ;; (eprintf "print-to: ~a~%" (apply format fmt args))
+> > -    (apply fprintf to fmt args))
+> 
+> Variable arguments and |apply| cause a lot of allocation and
+> uncertainty. A macro version wouldn't have this problem if you wanted to
+> do it that way.
+> 
+> —
+> You are receiving this because you authored the thread.
+> Reply to this email directly, view it on GitHub
+> https://github.com/racket/racket/pull/1411/files/a5583485b67cff28edef92607574f1f9288b836c#r74072424,
+> or mute the thread
+> https://github.com/notifications/unsubscribe-auth/ABDkIaYMp5gfdDzFn2Mkr1j7yaFKDqaNks5qeJJ0gaJpZM4Jf_v6.
+
+## 
+
+Tim Brown - tim@timb.net - +44(0)7771714159
+
+This whole thing is basically `run-server` from `mzlib/thread`
+
+Racket is so comprehensive that sometimes things like that are hard to find.
+
+`mzlib/...` seems to contain a lot of interesting and useful stuff, but I tend to avoid it since the documentation is covered in “legacy this” and “deprecated that”.
+A deprecation notice is actually at the top of the `mzlib/thread` documentation (although, in fairness, that last point is a post-hoc justification for not using it)
+
+Is `mzlib` available during the testing phase for `net`?
+Should I be using it?
+Will it be deprecated away from me at some point?
+
+If it is suitable, I'll move to the `mzlib` code.
+
+"switching to" ...
+
+While we're here, I think "value" should be "datum", re Jay's comment on the issue.
+
+Suggestion: replace this sentence with "If `y` contains a `.`, the reader will group `.`-separated datums from left-to-right. For example, `x.y.z` reads as `(list #%dot (list #%dot x y) z)`."
+
+Yes, definitely.
+
++1
+
+It's not really that `y` contains a `.`, it's that there's another `.` after `y`. So would "If `y` has another `.` after it, the reader will group `.`-separated datums from left-to-right" be better?
+
+What happens to the source location and syntax properties of the pair itself? In other words, if `id` is a macro, what does `(syntax-source stx)` produce within the macro? If I read you code correctly, I think the source location and properties of the syntax pair (or syntax list) itself are preserved.
+
+Is this what "All source locations and syntax properties in `@racket[form]` are preserved" implies?
+
+Yes, that’s all correct. The implementation of `#%namespaced` is very careful to preserve _all_ source locations and properties, even the ones “on the parentheses”, that is, the srclocs and properties of the pair itself.
+
+I think this message should reference all the username/password pairs in `(get-git-checkout-credentials)` (if that list is non-empty).
+
+Hmm, that makes sense, but it would be a really bad idea to print passwords in an error message. Maybe it should just print the usernames?
+
+Oh right. Yeah. Something like "failed to log in with usernames ...., last exception was: ...."
+
+You should also add {a,b}-{c,d}.rkt as a way to write a-c.rkt a-d.rkt b-c.rkt b-d.rkt
+
+I don't get it -- can you explain more what the `{}` should do? (Right now `"[ab]-[cd].rkt"` matches the same 4 files.)
+
+braces work on whole strings
+
+{foo,bar}-{zog,zag}.rkt
+
+is
+
+foo-zog.rkt foo-zag.rkt bar-zog.rkt bar-zag.rkt
+
+Your shell does this :)
+
+With this, someone searching for "OS X SSL" will not get this result, whereas they would now. Could you add the old title to the index separately?
+Nitpick: can one speak of macOS 10.2? 10.2 was before the name change.
+"Mac macOS"
+idem
+idem
+idem
+idem
+"Mac macOS"
+"Mac macOS"
+"Mac macOS"
+Since the usage here is “10.2 __and later__”, I think it's better with “macOS”. If it were a specific reference to only the 10.2 release, then "OS X 10.2". Also, American corporations are the worst.
+I’ll revert this one because “OS X” is baked into the whole naming scheme of the package & its functions. The package maintainer should decide what happens.
+The return type should use `exact-nonnegative-integer?` instead of `any/c`, right? (same for `index-where`)
+This should probably be either `@tech` or `@deftech`.
+Wasn’t sure about that, or whether it should link to this:
+
+http://docs.racket-lang.org/reference/running-sa.html?q=run-time%20configuration#%28part._configure-runtime%29
+In general you don't want to use `@emph` for technical terms. But I'm not sure if that's the right place to link to -- it seems like maybe this is the definition.
+Why the `'` here?
+Avoid depending on `racket/struct`, since it pulls in `racket/contract/base` (and see below)
+Use `(cdr (vector->list (struct->vector _)))` instead of `struct->list`
+don't nest test cases within other test cases (rackunit needs a non-delaying version of test-suite)
+I think we can actually just use the `host` field and don't need `auto-reconnect-host`. Is there something I'm missing?
+I think this should check for `auto-reconnect?`
+This should be added to the docs
+This should be added to the docs
+The contracts need to be updated too
+I believe you’re missing this: https://github.com/racket/racket/blob/6632beeca98de0dda9b56121ee7ebed517a3a1ba/racket/collects/net/http-client.rkt#L104
+
+The function `http-conn-close!` overwrites the `host` and then it’s lost—we don’t have access to it when trying to reconnect.
+It does, via its contract. Do you think I should add redundancy?
+👍 This is my next task, now that you reviewed the approach.
+👍 This is my next task, now that you reviewed the approach.
+Do you mean the contracts in the documentation?
+Note, however, that `http-conn-close!` does **not** overwrite `port`, so I was able to reuse that field without having to add a new `auto-reconnect-port` field to `http-conn`.
+You're right
+I do, because it is not only called externally.
+Specifically, it shouldn't error but should just not do anything
+Ya, I imagine you planned on that :)
+Got it. Done.
+This check is new, and maybe unnecessary, and incidentally the only duplicate call to `raise-...-error` (all the others have unique error messages or arguments). 
+
+But it's here because it makes sense to me that `(random "a" "b")` blames its first argument.
+Should these say `true` instead of `@racket[#t]`?
+
+Most places I looked in the docs say "If .... is `#f` .... otherwise ....", but [`copy-directory/files`](http://docs.racket-lang.org/reference/Filesystem.html#%28def._%28%28lib._racket%2Ffile..rkt%29._copy-directory%2Ffiles%29%29) says `true`
+I would say "The input port is closed unless `close?` is `#f`."
+Thank you, updated to @samth 's suggestion
+Is `port->string/close` defined here? (I was waiting for the build to finish to see, but might as well ask)
+Oh, it's not defined there. Tests passed locally (run with `racket test.rkt` in this directory), so something's up. I'll make sure I'm actually running these tests.
+I was using the wrong racket executable. Removed the offending lines and confirmed tests pass locally. Thanks!
+This last check is boring, because I didn't see how to make an interesting `#:exercise` for `even-list/c`. Any suggestions?
+there is nothing interesting to do for exercise with flat contracts.
+I think this part might need to change: it looks like the `f` argument has to be supplied for each client, but I'm not very confident.
+This might mention the handin server as an example.
+The Scribble contract for  the`step` argument should be updated.
+(Also, should that contract say `zero?` instead of `(=/c 0)`? )
+What does it mean to say that `v1` impersonates `v1*`? I think the part that was cut below was trying to define "impersonates"; is "impersonates" defined somewhere else?
+Nit: don't start a sentence with a lowercase variable name. (See http://docs.racket-lang.org/style/reference-style.html#%28part._.Typesetting_.Prose%29)
+Turns out to be "6.9.0.2"
+Should this PR include the changes from #1666 ?
+Ok, more comments over there. Looking again, I see that part of the problem with the old documentation is that it's trying to centralize the definition of "impersonates" in `impersonator-of?`, but it works better to distribute that definition over things that construct impersonators. The main missing bit is the handling of compound values that contain impersonators, plus some details for immutable hash tables.
+@bennn: It looks like those changes may have gotten squashed into this PR by accident. There was a lot of rebasing going on, so that wouldn't be surprising. Let's address the comments from #1666, then see what it looks like for this one.
+change `but` to `and` ?
+Hmmm...can you give me your reasoning for changing `but` to `and` here?
+Because you changed `if` to `when`.
+
+I'm thinking, "the lifetime of `o` is predictable, initially it's weakly held and once the GC finds it it's strongly held"
+This makes sense. I'll make that change.
+
+I think the documentation for `#:make-c-id` shouldn't explain what a "convention" is. Instead, something like:
+
+"The `#:make-c-id` option supplies a `@tech{convention}` for changing the behavior of `_c-id`. See also `ffi/unsafe/define/conventions`."
+
+and `ffi/unsafe/define/conventions` would have a `@deftech{convention}`.
+`Symbol` should be `Identifier` (or vice-versa, as long as everything is consistent)
+is `hyphen->underline` another convention?
+EDIT: aha, it's a typo. This `racketblock` should be an `example`!
+
+can you also give examples that just use the convention, e.g.
+
+```
+@examples[
+  (hyphen->underline #'gtk-rc-parse)]
+```
+Is the first letter capitalized?
+(an example would be a good answer)
+minor: `attribute` isn't necessary, right?
+How about making this shorter?
+
+> The `#:make-c-id` option accepts an `@tech{FFI identifier convention}`.
+> If provided, then `c-id` defaults to `(make-c-id id)`.
+Yes it should, good catch, thanks.
+It is a typo, convention:hyphen->underscore is what it should be.
+Good idea.
+Yes it does.
+
+Either that, or it can be `#'make-c-id`.
+Hmm...I'm torn here. I like most of some of this, but I also want to say at a high level what a convention is here.
+This suggestion is outdated, thanks though. :)
+Nit: don't start the message with a capitalized "Invalid"
+Thanks, fixed.
+`accesor` should be `accessor`, and made `raco test -l tests/racket/test` fail
+style: this line needs 1 more indentation
+I don't think you need the last 4 names
+Can you use `list-ref` instead of the old school way?
+Eh, it looks like you are just adapting old code so no worries
+You can use `refman` here (as defined in "common.rkt") instead of `'(lib "scribblings/reference/reference.scrbl")`
+Changed. Thanks!
+`_long` is not always 8 bytes (not even on 64-bit platforms, thanks to Windows).
+Please don't start a sentence with a lowercase identifier (http://docs.racket-lang.org/style/reference-style.html section 5.3). The second sentence isn't complete.
+Nit: I don't think "padding" is the right word here.
+Maybe it's better to leave the description to the `make-cstruct-type` docs (and improve those docs as needed)?
+A public function should check arguments. I know that many functions here don't, because the original author didn't include them, but we've been trying to fill them in.
+I'm not seeing a `provide` of `compute-offsets`. Am I overlooking something?
+Good catch, thanks.
+Fair. I just didn't because I noticed none of the other ones did so I suspected there was a reason for that. I'll fix that. Thanks.
+Fixed, thanks.
+Err...ya,thanks.
+I honestly could go either way.
+The module (for some reason) defined the `define*` macro to be a define and provide. The other cstruct parts of that module used it for define, which is why I simply added the `*`.
+Looking again, I guess it doesn't matter since the `_long` is at the end, but I like the change to `_int`.
+Ah, right.
+Does this (and the `(pie-type ....)` call below) look good when rendered?
+
+(For me, "good" is "takes up less than 1 line".)
+I think so. At least this is how it looks like when I render it.
+![screen shot 2017-09-26 at 4 13 02 pm](https://user-images.githubusercontent.com/285926/30882015-b70f0c26-a2d5-11e7-8e65-a85187e3d1da.png)
+
+Shouldn't this come before `equal?` ?
+Oh, yeah, that's probably a good change (you're suggesting swapping the order of the arguments to `and`, right?).
+yes
+Can you add a test where `#:default` is a procedure
+`#:default` is missing a `default-expr` (it needs a `lambda` like `#:key` has)
+Nit: It sounds like the change was to stop parameterizing  submodules that have a module path. Something like `@racket[#f] (as opposed to a @tech{module path})` would be clearer to me.
+But that's minor, and I'll merge as-is unless you feel like adjusting the text in the next few minutes.
+Thanks, that’s a good point. I’ve tweaked the wording slightly, though in a different way from your suggestion, which I hope is less ambiguous.
+Is this binding used? I think it would have to appear syntactically in the `with-syntax` body to be relevant.
+Whoops, you’re right—that’s vestigial from an older version of the code. I’ll remove it.
+I would explicitly reference `accum-id`s here.
+I think we should have a test where `#:result` produces multiple values.
+This should probably have a history note too.
+done
+I think the contract here needs `(not/c impersonator?)`
+The error-message contract here also needs `(not/c impersonator?)`
+Instead of `size_t`, I'd prefer to use `uintptr_t`, since the rest of the implementation uses that type for pointer-sized integers.
+I agree. I changed it in the box-cas! implementation too.
