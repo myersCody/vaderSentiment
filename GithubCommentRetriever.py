@@ -206,5 +206,8 @@ if __name__ == '__main__':
     #github_tool.set_github_info('racket','racket','racket','/pulls/comments')  #Completed on 20171107
     '''Open MRS'''
     #github_tool.set_github_info('openmrs','openmrs','openmrs-core','/issues/comments')
-    github_tool.set_github_info('openmrs','openmrs','openmrs-core','/pulls/comments')
+    #github_tool.set_github_info('openmrs','openmrs','openmrs-core','/pulls/comments')
+    '''Sahana Eden'''
+    #github_tool.set_github_info('sahana','sahana','eden','/issues/comments')
+    github_tool.set_github_info('sahana','sahana','eden','/pulls/comments')
     github_tool.main()
