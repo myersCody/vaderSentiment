@@ -21,7 +21,7 @@ Before I could import nltk I needed to install the tool using pip3 install nltk
 CDM - 20171023
 """
 #This was needed for line #529
-import nltk
+import nltk #pip install nltk (if you using python2) not needed for python3
 nltk.download('punkt')
 
 ##Constants##
