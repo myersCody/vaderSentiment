@@ -1,6 +1,9 @@
+'''if you don't want to install ntlk, run in python3'''
 import glob
 import os
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from Database_Helper import Database_Helper
+from tqdm import tqdm
 
 DATA_DIR = 'Emilys_Data'
 class VaderAnalysis():
@@ -9,6 +12,7 @@ class VaderAnalysis():
     different methods and store these scores to a database'''
     def __init__(self):
         self.communities = self.sort_communities()  #<dict: <list:string>> A dict where the keys are community names and the values are a list of strings. 
+        self.db_helper = Database_Helper()
     
     def find_files(self):
         '''This method walks through the DATA_DIR directory collecting file
@@ -23,7 +27,7 @@ class VaderAnalysis():
                 if file.endswith(".txt"):
                     txt_file = os.path.join(root, file)
                     txt_files.append(txt_file)
-        #print txt_files
+        #print (txt_files)
         return txt_files
                     
     def sort_communities(self):
@@ -39,14 +43,16 @@ class VaderAnalysis():
         communities = {}
         for path in txt_files:
             #The second element in the file_path is the community name
-            community = path.split('/')[1] 
+            #print (path.split('/'))
+            community = path.split('/')[1]
+            #comment_type = 
             if community in communities.keys():
                 data_list = communities[community] 
                 data_list.append(path)
                 communities[community] = data_list
             else:
                 communities[community] = [path]
-        #print communities
+        #print (communities)
         return communities
     
     def read_files(self):
@@ -60,22 +66,29 @@ class VaderAnalysis():
                 with open(file_path) as f:
                     content = f.readlines()
                     content = [x.strip() for x in content]
-                    self.analyze_content(content)
+                    self.analyze_content(content,key)
             
-    def analyze_content(self,content):
+    def analyze_content(self,content,community):
         '''This method uses the vader SentimentIntensityAnalyzer to process 
         each comment in a text file.
         
         Args:
             content: <list: string> A list of file paths leading to community comment data.
         '''
+        
         analyzer = SentimentIntensityAnalyzer()
-        for sentence in content:
-            vs = analyzer.polarity_scores(sentence)
-            print (vs)
-            #print("{:-<65} {}".format(sentence, str(vs)))
+        for sentence in tqdm(content):
+            comment_dict = analyzer.polarity_scores(sentence)
+            comment_dict['community'] = community
+            comment_dict['sentence']  = sentence 
+            if sentence != "":
+                self.db_helper.insert_comment(comment_dict)
+            #print (comment_dict)
+            #print("{:-<65} {}".format(sentence, str(comment_dict))
         
 if __name__ == "__main__":
     vader_obj = VaderAnalysis()
-    vader_obj.read_files()
     vader_obj.sort_communities()
+    vader_obj.read_files()
+    
+    
