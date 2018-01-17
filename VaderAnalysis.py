@@ -88,7 +88,7 @@ class VaderAnalysis():
         
 if __name__ == "__main__":
     vader_obj = VaderAnalysis()
-    vader_obj.sort_communities()
+    #vader_obj.sort_communities() #This was moved into the init of the class
     vader_obj.read_files()
     
     
