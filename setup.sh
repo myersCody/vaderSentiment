@@ -28,3 +28,4 @@ pip install nltk
 pip install requests
 pip install tqdm
 sudo pip3 install tqdm
+pip install XlsxWriter
